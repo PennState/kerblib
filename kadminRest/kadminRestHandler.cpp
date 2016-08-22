@@ -1,12 +1,12 @@
-#include "http.h"
-#include "router.h"
-#include "endpoint.h"
-#include "optional.h"
 #include "base64.h"
 #include "kerberosAdminSession.h"
 #include "kerberosAdminFlags.h"
 #include "userMetrics.h"
-#include "http_headers.h"
+#include "pistache/router.h"
+#include "pistache/endpoint.h"
+#include "pistache/optional.h"
+#include "pistache/http.h"
+#include "pistache/http_headers.h"
 #include "authorizationHeader.h"
 #include "json.hpp"
 #include "base64.h"
@@ -24,8 +24,8 @@ class KadminRestHandler {
        //Net::Http::Header::Registry::registerHeader<AuthorizationHeader>();      
     }
 
-    void init() {
-      auto opts = Net::Http::Endpoint::options().threads(1)
+    void init(int threads) {
+      auto opts = Net::Http::Endpoint::options().threads(threads)
                                                 .flags(Net::Tcp::Options::InstallSignalHandler);
       httpEndpoint_->init(opts);
 
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
 
   std::string adminPrincipal;
   std::string keytab;
-  std::string real;
+  std::string realm;
   int port = 9080;
   int threads = 1;
 
@@ -214,10 +214,9 @@ int main(int argc, char** argv) {
   }
 
   Net::Address addr(Net::Ipv4::any(), Net::Port(port));
-  auto opts = Net::Http::Endpoint::options().threads(threads);
 
   KadminRestHandler hrh(addr);
-  hrh.init();
+  hrh.init(threads);
   hrh.start();
 
   hrh.shutdown();
