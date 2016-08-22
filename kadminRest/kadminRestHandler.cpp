@@ -20,7 +20,10 @@ using namespace Net;
 class KadminRestHandler {
 
   public:
-    KadminRestHandler(Net::Address addr) : httpEndpoint_(std::make_shared<Net::Http::Endpoint>(addr)) {
+    KadminRestHandler(Net::Address addr, const std::string princ, std::string realm, std::string keytab) : httpEndpoint_(std::make_shared<Net::Http::Endpoint>(addr)),
+                                                                                                           adminUser_(princ),
+                                                                                                           realm_(realm),
+                                                                                                           keytab_(keytab) {
        //Net::Http::Header::Registry::registerHeader<AuthorizationHeader>();      
     }
 
@@ -51,11 +54,9 @@ class KadminRestHandler {
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
-      std::string adminUser = "admin";
-      std::string realm = "dce.psu.edu";
-      std::string keytab = "/home/shawn/src/c++/pistache/admin.keytab";
+      
       try {
-        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser, realm, keytab);
+        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
         std::string uid = request.param(":uid").as<std::string>();
         ait::kerberos::UserMetrics metrics = kerbSession.getUserMetrics(uid);
@@ -94,23 +95,16 @@ class KadminRestHandler {
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
-      std::string adminUser = "admin";
-      std::string realm = "dce.psu.edu";
-      std::string keytab = "/home/shawn/src/c++/pistache/admin.keytab";
-
-      ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser, realm, keytab);
+      ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
       std::string uid = request.param(":uid").as<std::string>();
       kerbSession.deleteUser(uid);
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
-      std::string adminUser = "admin";
-      std::string realm = "dce.psu.edu";
-      std::string keytab = "/home/shawn/src/c++/pistache/admin.keytab";
 
       try {
-        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser, realm, keytab);
+        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
         std::string uid = request.param(":uid").as<std::string>();
 
@@ -175,6 +169,10 @@ class KadminRestHandler {
 
     std::shared_ptr<Net::Http::Endpoint> httpEndpoint_;
     Rest::Router router_;
+   
+    std::string adminUser_;
+    std::string realm_;
+    std::string keytab_;
 };
 
 void usage()
@@ -184,9 +182,15 @@ void usage()
 
 int main(int argc, char** argv) {
 
-  std::string adminPrincipal;
-  std::string keytab;
-  std::string realm;
+  std::cout << "argc = " << argc << std::endl;
+  if (argc < 7) {
+    usage();
+    return -1;
+  }
+
+  std::string adminPrincipal("");
+  std::string keytab("");
+  std::string realm("");
   int port = 9080;
   int threads = 1;
 
@@ -213,9 +217,15 @@ int main(int argc, char** argv) {
     }
   }
 
+  if (adminPrincipal.empty() || keytab.empty() || realm.empty()) {
+     std::cerr << "Admin Principal, Keytab and Realm are required fields" << std::endl;
+     usage();
+     return -1;
+  }
+
   Net::Address addr(Net::Ipv4::any(), Net::Port(port));
 
-  KadminRestHandler hrh(addr);
+  KadminRestHandler hrh(addr, adminPrincipal, realm, keytab);
   hrh.init(threads);
   hrh.start();
 
