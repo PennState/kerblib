@@ -147,15 +147,20 @@ namespace ait
             #endif
 
             throw UnableToCreateSessionException(message);
+          } else {
+            std::cout << "Session established with skey" << std::endl;
           }
+         
         
           ret = krb5_cc_close(context_, cc);
-          if (ret)
+          if (ret) {
             throw UnableToCreateSessionException("Failed while closing cache");
+          }
         
           ret = kadm5_init_iprop(serverHandle_, 0);
-          if (ret)
+          if (ret) {
             throw UnableToCreateSessionException("kadm5_init_iprop");
+          }
         }
     };  
   }

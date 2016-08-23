@@ -12,6 +12,8 @@
 #include "base64.h"
 #include "unable_to_initialize_exception.h"
 #include "unableToChangePasswordException.h"
+#include "userAlreadyExistsException.h"
+#include "invalidPasswordException.h"
 #include "securityRequestFailedException.h"
 #include "loggers/consoleLogger.h"
 
@@ -20,6 +22,8 @@ using namespace Net;
 class KadminRestHandler {
 
   public:
+    const std::string PASSWORD_REQUIREMENTS_MESSAGE = "It must be at least eight characters in length (Longer is generally better.)\nIt must contain at least one alphabetic and one numeric character.\nIt must be significantly different from previous passwords.\nIt cannot be the same as the userid.\nIt cannot contain the following special characters - spaces, \', \", &, (, ), |, <, >.\nIt should not be information easily obtainable about you. This includes license plate, social security, telephone numbers, or street address";
+
     KadminRestHandler(Net::Address addr, const std::string princ, std::string realm, std::string keytab) : httpEndpoint_(std::make_shared<Net::Http::Endpoint>(addr)),
                                                                                                            adminUser_(princ),
                                                                                                            realm_(realm),
@@ -48,9 +52,38 @@ class KadminRestHandler {
     void setupRoutes() {
       using namespace Net::Rest;
 
+      Routes::Post(router_, "/resources/users/", Routes::bind(&KadminRestHandler::createUser, this));
       Routes::Get(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::getUserMetrics, this));
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
+    }
+
+    void createUser(const Rest::Request& request, Http::ResponseWriter response) {
+      std::string entity = request.body();
+      std::cout << entity << std::endl;
+
+      nlohmann::json j = nlohmann::json::parse(entity);
+
+      auto userid = j["userid"].get<std::string>();
+      auto password = j["password"].get<std::string>();
+
+      std::cout << "userid " << userid << " password " << password << std::endl;
+
+      try {
+        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
+        kerbSession.createUser(userid, password);
+      } catch (ait::kerberos::UserAlreadyExistsException &ex) {
+        response.send(Http::Code::Conflict);
+        return;
+      } catch (ait::kerberos::InvalidPasswordException &ex) {
+        response.send(Http::Code::Bad_Request, PASSWORD_REQUIREMENTS_MESSAGE);
+        return;
+      } catch (ait::kerberos::SecurityRequestFailedException &ex) {
+        response.send(Http::Code::Internal_Server_Error, "Contact the service desk");
+        return;
+       }
+
+      response.send(Http::Code::Created);
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {

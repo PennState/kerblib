@@ -126,8 +126,9 @@ namespace ait
             std::cout << "There are flags, setting the ATTRIBUTES mask" << std::endl;
             mask |= KADM5_ATTRIBUTES;
           }
-          else
+          else {
             std::cout << "No flags this time" << std::endl;
+          }
 
           createUser(principal, mask, userID, password);
         }
@@ -265,15 +266,17 @@ namespace ait
 
         void createUser(kadm5_principal_ent_rec &principal, long mask, const std::string &userID, const std::string &password)
         {
-           if (userID.empty())
+           if (userID.empty()) {
              throw InvalidUserException("Cannot create a principal with an empty userID");
+           }
          
            std::cout << "Parsing the name" << std::endl;
            krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
            std::cout << "        Parsed the name" << std::endl;
          
-           if (password.empty())
+           if (password.empty()) {
              throw InvalidPasswordException("Cannot create a principal with an empty password");
+           }
          
            char pw[password.length() + 1];
            memset((void *)pw, '\0', password.length() + 1);
@@ -286,27 +289,28 @@ namespace ait
            switch(ret)
            {
              case KADM5_DUP:
-               com_err("kerberosAdminSession", ret, "  creating a user");
                throw UserAlreadyExistsException(userID);
                break;
              case KADM5_PASS_Q_TOOSHORT:
-               com_err("kerberosAdminSession", ret, "  creating a user");
                throw InvalidPasswordException("The password you requested is too short");
                break;
              case KADM5_PASS_Q_DICT:
-               com_err("kerberosAdminSession", ret, "  creating a user");
                throw InvalidPasswordException("The password you requested is succeptible to a dictionary attack");
                break;
              case KADM5_PASS_Q_CLASS:
-               com_err("kerberosAdminSession", ret, "  creating a user");
                throw InvalidPasswordException("The password you requested is wrong because...");
                break;
              case KADM5_PASS_Q_GENERIC:
-               com_err("kerberosAdminSession", ret, "  creating a user");
                throw InvalidPasswordException("The password you requested is wrong because...");
                break;
+             case KADM5_BAD_MASK:
+               throw SecurityRequestFailedException("Bad Mask on the create request");
+               break;
+             case KADM5_BAD_SERVER_HANDLE:
+               std::cerr << "Bad server handle" << std::endl;
+               throw SecurityRequestFailedException("Bad Server Handle");
+               break;
              default:
-               com_err("kerberosAdminSession", ret, "  creating a user");
                std::cout << "Error on the create " << ret << std::endl;
                break;
            }
