@@ -81,7 +81,9 @@ class KadminRestHandler {
       } catch (ait::kerberos::SecurityRequestFailedException &ex) {
         response.send(Http::Code::Internal_Server_Error, "Contact the service desk");
         return;
-       }
+       } catch (...) {
+        std::cout << "Unknown error received while attempting to create a user" << std::endl;
+        response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
 
       response.send(Http::Code::Created);
     }
