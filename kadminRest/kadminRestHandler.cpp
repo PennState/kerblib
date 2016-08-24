@@ -35,7 +35,6 @@ class KadminRestHandler {
       auto opts = Net::Http::Endpoint::options().threads(threads)
                                                 .flags(Net::Tcp::Options::InstallSignalHandler);
       httpEndpoint_->init(opts);
-
       setupRoutes();
     }
 
@@ -84,6 +83,7 @@ class KadminRestHandler {
        } catch (...) {
         std::cout << "Unknown error received while attempting to create a user" << std::endl;
         response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
+      }
 
       response.send(Http::Code::Created);
     }
