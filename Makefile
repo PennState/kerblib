@@ -20,7 +20,7 @@ examples_obj_files = $(examples_src:%.cpp=%.o)
 
 library_destination = ./lib/libkrb_security.a
 
-CC_ARGS := -std=c++11 -Wall -I. -I./include -I/usr/local/include -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lkrb5 -lkadm5clnt_mit -lnet -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications 
+CC_ARGS := -std=c++11 -Wall -I. -I./include -I/usr/local/include -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lkrb5 -lkadm5clnt_mit -lnet_static -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications 
 
 .PHONY: src loggers lib adminLock adminUnlock kadminRest examples
 
