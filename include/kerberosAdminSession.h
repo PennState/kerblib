@@ -38,6 +38,7 @@ namespace ait
         void createUser(const std::string &userID, const std::string &password, uint32_t flags = 0x00000000)
         {
           kadm5_principal_ent_rec principal;
+          krb5_error_code ret;
 
           long mask = 0;
 
@@ -46,9 +47,17 @@ namespace ait
 
           char userID_Array[userID.size() + 1];
           memset((void *)userID_Array, '\0', userID.size() + 1);
+          //char *userID_Array = nullptr;
 
+          std::cout << "strncpy" << std::endl;
           strncpy(userID_Array, userID.c_str(), userID.size());
-          krb5_parse_name(this->context_, userID_Array, &(principal.principal));
+          std::cout << "parse name" << std::endl;
+          ret = krb5_parse_name(this->context_, userID_Array, &(principal.principal));
+          //ret = krb5_unparse_name(this->context_, principal.principal, &userID_Array);
+
+          if (ret) {
+            std::cerr << "Oops on parse " << ret << std::endl;
+          }
 
           char pw[password.length() + 1];
           memset((void *)pw, '\0', password.size() + 1);
@@ -130,6 +139,7 @@ namespace ait
             std::cout << "No flags this time" << std::endl;
           }
 
+          mask |= KADM5_PRINCIPAL;
           createUser(principal, mask, userID, password);
         }
 
@@ -283,7 +293,8 @@ namespace ait
            strncpy(pw, password.c_str(), password.length());
          
            std::cout << "Calling create principal" << std::endl;
-           kadm5_ret_t ret = kadm5_create_principal(&(this->serverHandle_), &principal, mask, pw);
+           //kadm5_ret_t ret = kadm5_create_principal(&(this->serverHandle_), &principal, mask, pw);
+           kadm5_ret_t ret = kadm5_create_principal(this->serverHandle_, &principal, mask, pw);
            std::cout << "        Called create principal" << std::endl;
          
            switch(ret)
