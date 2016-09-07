@@ -134,6 +134,7 @@ class KadminRestHandler {
 
       std::string uid = request.param(":uid").as<std::string>();
       kerbSession.deleteUser(uid);
+      response.send(Http::Code::No_Content);
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {

@@ -170,7 +170,9 @@ namespace ait
         void deleteUser(const std::string &userID)
         {
           kadm5_principal_ent_rec principalData = getPrincipal(userID);
-          kadm5_delete_principal(this->serverHandle_, principalData.principal);
+          kadm5_ret_t ret = kadm5_delete_principal(this->serverHandle_, principalData.principal);
+
+          std::cout << "Delete return = " << ret << std::endl;
         }
 
         void updateUserPassword(const std::string &userID, const std::string &password)
