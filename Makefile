@@ -34,14 +34,14 @@ loggers : $(loggers_src)
 	$(CXX) -c $< $(CC_ARGS) 
 
 adminLock : $(adminLock_src)
-	$(CXX) -o bin/adminLock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -Bstatic -lait_utilities -lait_communications -lboost_regex
+	$(CXX) -o bin/adminLock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -static -lait_utilities -lait_communications -static -lboost_regex
 
 adminUnlock : $(adminUnlock_src)
-	$(CXX) -g -o bin/adminUnlock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -Bstatic -lait_utilities -lait_communications -lboost_regex
+	$(CXX) -g -o bin/adminUnlock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -static -lait_utilities -lait_communications -static -lboost_regex
 
 $(warning $(kadminRest_src))
 kadminRest : $(kadminRest_src)
-	$(CXX) -g -o bin/kadminRest $? $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -Bstatic -lait_utilities -lait_communications -lboost_regex
+	$(CXX) -g -o bin/kadminRest $? $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -static -lait_utilities -lait_communications -static -lboost_regex
 
 examples : $(examples_src)
 	$(CXX) -o bin/examples $< $(CC_ARGS) -L./lib -lkrb_security 
