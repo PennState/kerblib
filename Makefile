@@ -20,7 +20,7 @@ examples_obj_files = $(examples_src:%.cpp=%.o)
 
 library_destination = ./lib/libkrb_security.a
 
-CC_ARGS := -std=c++11 -Wall -I. -I./include -I/usr/local/include -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lkrb5 -lkadm5clnt_mit -lnet_static -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications 
+CC_ARGS := -std=c++11 -Wall -I. -I./include -I/usr/local/include -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lnet_static -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications -lboost_regex -Bdynamic -lkrb5 -lkadm5clnt 
 
 .PHONY: src loggers lib adminLock adminUnlock kadminRest examples
 
@@ -34,14 +34,14 @@ loggers : $(loggers_src)
 	$(CXX) -c $< $(CC_ARGS) 
 
 adminLock : $(adminLock_src)
-	$(CXX) -o bin/adminLock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -static -lait_utilities -lait_communications -static -lboost_regex
+	$(CXX) -o bin/adminLock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -lait_utilities -lait_communications 
 
 adminUnlock : $(adminUnlock_src)
-	$(CXX) -g -o bin/adminUnlock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -static -lait_utilities -lait_communications -static -lboost_regex
+	$(CXX) -g -o bin/adminUnlock $< $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -lait_utilities -lait_communications 
 
 $(warning $(kadminRest_src))
 kadminRest : $(kadminRest_src)
-	$(CXX) -g -o bin/kadminRest $? $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -static -lait_utilities -lait_communications -static -lboost_regex
+	$(CXX) -g -o bin/kadminRest $? $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -lait_utilities -lait_communications 
 
 examples : $(examples_src)
 	$(CXX) -o bin/examples $< $(CC_ARGS) -L./lib -lkrb_security 
