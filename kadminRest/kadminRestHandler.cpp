@@ -213,7 +213,7 @@ class KadminRestHandler {
 
 void usage()
 {
-  std::cout << "Usage:\nkadminRest -a adminPrincipal -k keytab -r kerbRealm [-p logMessage] [-t threadCount]" << std::endl;
+  std::cout << "Usage:\nkadminRest -a adminPrincipal -k keytab -r kerbRealm [-p port] [-t threadCount]" << std::endl;
 }
 
 int main(int argc, char** argv) {
