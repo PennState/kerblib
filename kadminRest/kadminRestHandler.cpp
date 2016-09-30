@@ -16,6 +16,7 @@
 #include "invalidPasswordException.h"
 #include "securityRequestFailedException.h"
 #include "loggers/consoleLogger.h"
+#include <arpa/inet.h>
 
 using namespace Net;
 
@@ -227,11 +228,13 @@ int main(int argc, char** argv) {
   std::string adminPrincipal("");
   std::string keytab("");
   std::string realm("");
+  struct sockaddr_in ipaddr;
+  bool ipaddrSet = false;
   int port = 9080;
   int threads = 1;
 
   int option;
-  while ((option = getopt(argc, argv, "a:k:p:r:m:")) != -1)
+  while ((option = getopt(argc, argv, "a:k:i:p:r:m:")) != -1)
   {
     switch(option)
     {
@@ -247,6 +250,10 @@ int main(int argc, char** argv) {
       case 'p' :
         port = std::stoi(optarg);
         break;
+      case 'i' :
+        inet_pton(AF_INET, optarg, &(ipaddr.sin_addr)); 
+        ipaddrSet = true;
+        break;
       case 't' :
         threads = std::stoi(optarg);
         break;
@@ -259,7 +266,16 @@ int main(int argc, char** argv) {
      return -1;
   }
 
-  Net::Address addr(Net::Ipv4::any(), Net::Port(port));
+  Net::Address addr;
+
+  if (ipaddrSet) {
+    ipaddr.sin_port = port;
+    addr = std::move(Net::Address::fromUnix((sockaddr *)&ipaddr));
+  } else {
+    addr = std::move(Net::Address(Net::Ipv4::any(), Net::Port(port)));
+  }
+
+  //Net::Address addr(ipv4, Net::Port(port));
 
   KadminRestHandler hrh(addr, adminPrincipal, realm, keytab);
   hrh.init(threads);
