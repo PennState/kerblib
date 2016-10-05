@@ -67,8 +67,6 @@ class KadminRestHandler {
       auto userid = j["userid"].get<std::string>();
       auto password = j["password"].get<std::string>();
 
-      std::cout << "userid " << userid << " password " << password << std::endl;
-
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
         kerbSession.createUser(userid, password);
