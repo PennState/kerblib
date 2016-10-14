@@ -66,11 +66,21 @@ class KadminRestHandler {
 
       auto userid = j["userid"].get<std::string>();
       auto password = j["password"].get<std::string>();
-      auto policy = j["policy"].get<std::string>();
+      std::string policy = "none";
+
+      try {
+        policy = j["policy"].get<std::string>();
+      } catch(std::domain_error &de) {
+        //Do nothing, use default policy
+      }
 
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
-        kerbSession.createUser(userid, password, policy);
+        if (policy != "none") {
+          kerbSession.createUser(userid, password, policy);
+        } else {
+          kerbSession.createUser(userid, password);
+        }
       } catch (ait::kerberos::UserAlreadyExistsException &ex) {
         response.send(Http::Code::Conflict);
         return;
