@@ -7,6 +7,7 @@
 #include "pistache/optional.h"
 #include "pistache/http.h"
 #include "pistache/http_headers.h"
+#include "pistache/mime.h"
 #include "authorizationHeader.h"
 #include "json.hpp"
 #include "base64.h"
@@ -113,10 +114,10 @@ class KadminRestHandler {
            {"lastSuccessfulLogin", metrics.lastSuccessfulLoginAsString()},
            {"lastFailedLogin", metrics.lastFailedLoginAsString()}};
 
-       
+        response.setMime(Net::Http::Mime::MediaType::fromString("application/json"));
         response.send(Http::Code::Ok, j.dump(2));
       } catch(ait::kerberos::UnableToFindUserException &srfe) {
-         response.send(Http::Code::Not_Found, srfe.what() + "\n");
+	      response.send(Http::Code::Not_Found, srfe.what() + "\n");
       } catch(ait::kerberos::UserAlreadyExistsException &uaee) {
          std::string error = "User already Exists Exception " + uaee.what();
          std::cerr << error << std::endl;
@@ -184,7 +185,7 @@ class KadminRestHandler {
 
             std::size_t pos = val.find(":");
             if (pos == std::string::npos) {
-              response.send(Http::Code::Bad_Request, "Header paramaters malformed");
+              response.send(Http::Code::Bad_Request, "Header parameters malformed");
               return;
             }
 
