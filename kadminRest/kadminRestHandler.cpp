@@ -144,7 +144,15 @@ class KadminRestHandler {
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
       std::string uid = request.param(":uid").as<std::string>();
-      kerbSession.deleteUser(uid);
+      try {
+        kerbSession.deleteUser(uid);
+      } catch(ait::kerberos::NotAuthorizedException &e) {
+         response.send(Http::Code::Forbidden);
+      } catch(ait::kerberos::UnableToDeletePrincipalException &e) {
+         response.send(Http::Code::Bad_Request, e.what());
+      } catch(ait::kerberos::CommunicationException &e) {
+         response.send(Http::Code::Internal_Server_Error);
+      }
       response.send(Http::Code::No_Content);
     }
 

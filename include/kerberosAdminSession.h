@@ -13,6 +13,10 @@
 #include "invalidPasswordException.h"
 #include "invalidUserException.h"
 #include "unableToFindUserException.h"
+#include "notAuthorizedException.h"
+#include "communicationException.h"
+#include "unableToDeletePrincipalException.h"
+
 #include "securityRequestFailedException.h"
 
 #include <kadm5/kadm_err.h>
@@ -172,7 +176,25 @@ namespace ait
           kadm5_principal_ent_rec principalData = getPrincipal(userID);
           kadm5_ret_t ret = kadm5_delete_principal(this->serverHandle_, principalData.principal);
 
-          std::cout << "Delete return = " << ret << std::endl;
+          switch (ret) {
+            case KADM5_AUTH_DELETE :
+              throw kerberos::NotAuthorizedException();
+              break;
+            case KADM5_BAD_CLIENT_PARAMS :
+              throw kerberos::UnableToDeletePrincipalException("Incorrect parameter specified");
+              break;
+            case KADM5_BAD_SERVER_HANDLE:
+            case KADM5_GSS_ERROR:
+            case KADM5_RPC_ERROR:
+              throw kerberos::CommunicationException();
+              break;
+            case KADM5_UNK_PRINC:
+              throw kerberos::UnableToFindUserException("Principal " + userID + " was not found");
+              break;
+            default:
+              //Assume Success
+              std::cout << "Delete return = " << ret << std::endl;
+          }
         }
 
         void updateUserPassword(const std::string &userID, const std::string &password)
