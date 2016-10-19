@@ -190,26 +190,32 @@ class KadminRestHandler {
             }
 
             std::string userid = val.substr(0, pos);
-            std::string password = val.substr(pos + 1);
+            if (userid != uid) {
+              response.send(Http::Code::Forbidden);
+            } else {
+              std::string password = val.substr(pos + 1);
 
-            try {
-              kerbSession.updateUserPassword(userid, password);
-              response.send(Http::Code::Ok, "User " + uid + " password changed");
-            } catch (ait::kerberos::UnableToChangePasswordException &ex) {
-              response.send(Http::Code::Bad_Request, ex.what());
-            } catch (ait::kerberos::UnableToFindUserException& ex) {
-              response.send(Http::Code::Not_Found, ex.what());
-            } catch (ait::kerberos::SecurityRequestFailedException& ex) {
-              response.send(Http::Code::Not_Found, ex.what());
+              try {
+                kerbSession.updateUserPassword(userid, password);
+                response.send(Http::Code::Ok, "User " + uid + " password changed");
+              } catch (ait::kerberos::UnableToChangePasswordException &ex) {
+                response.send(Http::Code::Bad_Request, ex.what());
+              } catch (ait::kerberos::UnableToFindUserException& ex) {
+                response.send(Http::Code::Not_Found, ex.what());
+              } catch (ait::kerberos::SecurityRequestFailedException& ex) {
+                response.send(Http::Code::Not_Found, ex.what());
+              }
             }
           } else {
-            response.send(Http::Code::Bad_Request, "Missing password change headers");
-            std::cout << "no auth header" << std::endl;
+            response.send(Http::Code::Bad_Request, "Missing Auth Header Data");
+            std::cout << "Missing Auth Header Data" << std::endl;
           }
+        } else {
+            response.send(Http::Code::Bad_Request, ("Invalid User Action requested: " + action));
+            std::cout << "Invalid User Action requested: " << action << std::endl;
         }
 
-
-        response.send(Http::Code::Ok, "Executing action: " + action);
+        //response.send(Http::Code::Ok, "Executing action: " + action);
       } catch(...) {
       }
     }
