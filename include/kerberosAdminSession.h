@@ -160,7 +160,8 @@ namespace ait
            principal.policy = policyString;
          
            long mask  = 0l | KADM5_POLICY;
-         
+           mask |= KADM5_PRINCIPAL;
+
            createUser(principal, mask, userID, password);
         }
     

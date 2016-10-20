@@ -74,6 +74,8 @@ class KadminRestHandler {
         //Do nothing, use default policy
       }
 
+      std::cout << "Recieved a request to create user: " << userid << " with policy: " << policy << std::endl;
+
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
         if (policy != "none") {
@@ -143,6 +145,9 @@ class KadminRestHandler {
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
       std::string uid = request.param(":uid").as<std::string>();
+
+      std::cout << "Recieved a request to delete user: " << uid << std::endl;
+      
       try {
         kerbSession.deleteUser(uid);
       } catch(ait::kerberos::NotAuthorizedException &e) {
@@ -171,6 +176,8 @@ class KadminRestHandler {
         }
 
         auto action = queryParam.get();        
+
+        std::cout << "Recieved a request to alter user: " << uid << " action: " << action << std::endl;
 
         if (action == "lock") {
           kerbSession.lockUser(uid); 
