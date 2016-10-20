@@ -321,7 +321,7 @@ namespace ait
            std::cout << "Calling create principal" << std::endl;
            //kadm5_ret_t ret = kadm5_create_principal(&(this->serverHandle_), &principal, mask, pw);
            kadm5_ret_t ret = kadm5_create_principal(this->serverHandle_, &principal, mask, pw);
-           std::cout << "        Called create principal" << std::endl;
+           std::cout << "        Called create principal, ret = " << ret << std::endl;
          
            switch(ret)
            {
