@@ -16,6 +16,7 @@
 #include "notAuthorizedException.h"
 #include "communicationException.h"
 #include "unableToDeletePrincipalException.h"
+#include "invalidRequestException.h"
 
 #include "securityRequestFailedException.h"
 
@@ -324,6 +325,8 @@ namespace ait
          
            switch(ret)
            {
+             case KADM5_AUTH_ADD:
+                throw NotAuthorizedException();
              case KADM5_DUP:
                throw UserAlreadyExistsException(userID);
                break;
@@ -342,9 +345,12 @@ namespace ait
              case KADM5_BAD_MASK:
                throw SecurityRequestFailedException("Bad Mask on the create request");
                break;
+             case KADM5_UNK_POLICY:
+               throw  InvalidRequestException("The requested Policy is unknown to the KDC");
              case KADM5_BAD_SERVER_HANDLE:
-               std::cerr << "Bad server handle" << std::endl;
-               throw SecurityRequestFailedException("Bad Server Handle");
+             case KADM5_GSS_ERROR:
+             case KADM5_RPC_ERROR:
+               throw CommunicationException();
                break;
              default:
                std::cout << "Error on the create " << ret << std::endl;
