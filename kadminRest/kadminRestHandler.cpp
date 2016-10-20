@@ -61,7 +61,6 @@ class KadminRestHandler {
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
       std::string entity = request.body();
-      std::cout << entity << std::endl;
 
       nlohmann::json j = nlohmann::json::parse(entity);
 
