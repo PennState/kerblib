@@ -152,6 +152,8 @@ namespace ait
         {
            kadm5_principal_ent_rec principal;
          
+           std::cout << "Creating a principal with policy " << policy << std::endl;
+
            std::cout << "Clearing the principal" << std::endl;
            memset((void *) &principal, '\0', sizeof(principal));
          
@@ -166,9 +168,8 @@ namespace ait
               std::cout << "Policy " << policyString << " does not exist" << std::endl;
            } else {
               std::cout << "Policy " << policyString << " does exist" << std::endl;
+              kadm5_free_policy_ent(this->serverHandle_, &pol);
            } 
-   
-          kadm5_free_policy_ent(this->serverHandle_, &pol);
 
            long mask  = 0l | KADM5_POLICY;
            mask |= KADM5_PRINCIPAL;
