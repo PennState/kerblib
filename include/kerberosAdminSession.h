@@ -43,30 +43,30 @@ namespace ait
         void createUser(const std::string &userID, const std::string &password, uint32_t flags = 0x00000000)
         {
           kadm5_principal_ent_rec principal;
-          krb5_error_code ret;
+          //krb5_error_code ret;
 
           long mask = 0;
 
           std::cout << "Clearing out the principal" << std::endl;
           memset((void *) &principal, '\0', sizeof(principal));
 
-          char userID_Array[userID.size() + 1];
-          memset((void *)userID_Array, '\0', userID.size() + 1);
-          //char *userID_Array = nullptr;
-
-          std::cout << "strncpy" << std::endl;
-          strncpy(userID_Array, userID.c_str(), userID.size());
-          std::cout << "parse name" << std::endl;
-          ret = krb5_parse_name(this->context_, userID_Array, &(principal.principal));
+//          char userID_Array[userID.size() + 1];
+//          memset((void *)userID_Array, '\0', userID.size() + 1);
+//          //char *userID_Array = nullptr;
+//
+//          std::cout << "strncpy" << std::endl;
+//          strncpy(userID_Array, userID.c_str(), userID.size());
+//          std::cout << "parse name" << std::endl;
+//          ret = krb5_parse_name(this->context_, userID_Array, &(principal.principal));
           //ret = krb5_unparse_name(this->context_, principal.principal, &userID_Array);
 
-          if (ret) {
-            std::cerr << "Oops on parse " << ret << std::endl;
-          }
+//          if (ret) {
+//            std::cerr << "Oops on parse " << ret << std::endl;
+//          }
 
-          char pw[password.length() + 1];
-          memset((void *)pw, '\0', password.size() + 1);
-          strncpy(pw, password.c_str(), password.length());
+//          char pw[password.length() + 1];
+//          memset((void *)pw, '\0', password.size() + 1);
+//          strncpy(pw, password.c_str(), password.length());
 
           std::cout << "Checking if we have flags set" << std::endl;
           bool flagSet = false;
@@ -160,6 +160,16 @@ namespace ait
          
            principal.policy = policyString;
          
+           kadm5_policy_ent_rec pol;
+
+           if (kadm5_get_policy(this->serverHandle_, policyString, &pol) != 0) {
+              std::cout << "Policy " << policyString << " does not exist" << std::endl;
+           } else {
+              std::cout << "Policy " << policyString << " does exist" << std::endl;
+           } 
+   
+          kadm5_free_policy_ent(this->serverHandle_, &pol);
+
            long mask  = 0l | KADM5_POLICY;
            mask |= KADM5_PRINCIPAL;
 
