@@ -158,6 +158,7 @@ namespace ait
            memset((void *) &principal, '\0', sizeof(principal));
          
            char policyString[policy.length() + 1];
+           memset((void *) &policyString, '\0', sizeof(policyString));
            strncpy(policyString, policy.c_str(), policy.length());
          
            std::cout << "Policy string is " << policyString << std::endl;
