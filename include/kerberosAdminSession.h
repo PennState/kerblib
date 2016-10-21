@@ -160,6 +160,8 @@ namespace ait
            char policyString[policy.length() + 1];
            strncpy(policyString, policy.c_str(), policy.length());
          
+           std::cout << "Policy string is " << policyString << std::endl;
+
            principal.policy = policyString;
          
            kadm5_policy_ent_rec pol;
