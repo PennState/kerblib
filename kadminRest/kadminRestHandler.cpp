@@ -115,9 +115,9 @@ class KadminRestHandler {
         ait::kerberos::UserMetrics metrics = kerbSession.getUserMetrics(uid);
 
         nlohmann::json j = {
+           {"passwordCreation", metrics.passwordCreationAsString()},
            {"passwordExpiration", metrics.passwordExpirationAsString()},
            {"principalExpiration", metrics.principalExpirationAsString()},
-           {"passwordCreation", metrics.passwordCreationAsString()},
            {"lastSuccessfulLogin", metrics.lastSuccessfulLoginAsString()},
            {"lastFailedLogin", metrics.lastFailedLoginAsString()}};
 
@@ -201,7 +201,6 @@ class KadminRestHandler {
             std::string val = raw.value();
             std::string basic("Basic ");
             val = base64_decode(val.substr(basic.length()));
-            std::cout << val << std::endl;
 
             std::size_t pos = val.find(":");
             if (pos == std::string::npos) {
