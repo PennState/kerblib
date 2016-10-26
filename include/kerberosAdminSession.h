@@ -47,28 +47,8 @@ namespace ait
 
           long mask = 0;
 
-          std::cout << "Clearing out the principal" << std::endl;
           memset((void *) &principal, '\0', sizeof(principal));
 
-//          char userID_Array[userID.size() + 1];
-//          memset((void *)userID_Array, '\0', userID.size() + 1);
-//          //char *userID_Array = nullptr;
-//
-//          std::cout << "strncpy" << std::endl;
-//          strncpy(userID_Array, userID.c_str(), userID.size());
-//          std::cout << "parse name" << std::endl;
-//          ret = krb5_parse_name(this->context_, userID_Array, &(principal.principal));
-          //ret = krb5_unparse_name(this->context_, principal.principal, &userID_Array);
-
-//          if (ret) {
-//            std::cerr << "Oops on parse " << ret << std::endl;
-//          }
-
-//          char pw[password.length() + 1];
-//          memset((void *)pw, '\0', password.size() + 1);
-//          strncpy(pw, password.c_str(), password.length());
-
-          std::cout << "Checking if we have flags set" << std::endl;
           bool flagSet = false;
           if (flags & ait::kerberos::DISALLOW_POSTDATED_TICKETS)
           {
@@ -135,8 +115,7 @@ namespace ait
             flagSet = true;
           }
 
-          if(flagSet)
-          {
+          if(flagSet) {
             std::cout << "There are flags, setting the ATTRIBUTES mask" << std::endl;
             mask |= KADM5_ATTRIBUTES;
           }
@@ -152,7 +131,6 @@ namespace ait
         {
            kadm5_principal_ent_rec principal;
          
-           std::cout << "Creating a principal with policy " << policy << std::endl;
 
            std::cout << "Clearing the principal" << std::endl;
            memset((void *) &principal, '\0', sizeof(principal));
@@ -161,7 +139,6 @@ namespace ait
            memset((void *) &policyString, '\0', sizeof(policyString));
            strncpy(policyString, policy.c_str(), policy.length());
          
-           std::cout << "Policy string is " << policyString << std::endl;
 
            principal.policy = policyString;
          
@@ -184,7 +161,7 @@ namespace ait
         {
           kadm5_principal_ent_rec principal = getPrincipal(userID);
           std::cout << "princ exp: " << principal.princ_expire_time << std::endl;
-          return UserMetrics(principal.pw_expiration, principal.princ_expire_time, principal.last_pwd_change, principal.last_success, principal.last_failed);
+          return UserMetrics(principal.pw_expiration, principal.princ_expire_time, principal.last_pwd_change, principal.last_success, principal.last_failed, principal.kvno);
         }
 
         void deleteUser(const std::string &userID)
@@ -215,7 +192,6 @@ namespace ait
 
         void updateUserPassword(const std::string &userID, const std::string &password)
         {
-          std::cout << "In updateUserPassword with userid " << userID << " and password " << password << std::endl;
           kadm5_principal_ent_rec principalData = getPrincipal(userID);
 
           std::cout << "Received the principal" << std::endl;
