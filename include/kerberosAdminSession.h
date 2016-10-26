@@ -192,6 +192,8 @@ namespace ait
 
         void updateUserPassword(const std::string &userID, const std::string &password)
         {
+          std::cout << "In updateUserPassword with userid " << userID << std::endl;
+
           kadm5_principal_ent_rec principalData = getPrincipal(userID);
 
           std::cout << "Received the principal" << std::endl;

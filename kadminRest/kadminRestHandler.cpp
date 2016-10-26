@@ -115,9 +115,9 @@ class KadminRestHandler {
         ait::kerberos::UserMetrics metrics = kerbSession.getUserMetrics(uid);
 
         nlohmann::json j = {
+           {"passwordCreation", metrics.passwordCreationAsString()},
            {"passwordExpiration", metrics.passwordExpirationAsString()},
            {"principalExpiration", metrics.principalExpirationAsString()},
-           {"passwordCreation", metrics.passwordCreationAsString()},
            {"lastSuccessfulLogin", metrics.lastSuccessfulLoginAsString()},
            {"lastFailedLogin", metrics.lastFailedLoginAsString()}};
 
