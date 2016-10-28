@@ -119,7 +119,8 @@ class KadminRestHandler {
            {"passwordExpiration", metrics.passwordExpirationAsString()},
            {"principalExpiration", metrics.principalExpirationAsString()},
            {"lastSuccessfulLogin", metrics.lastSuccessfulLoginAsString()},
-           {"lastFailedLogin", metrics.lastFailedLoginAsString()}};
+           {"lastFailedLogin", metrics.lastFailedLoginAsString()},
+           {"kvno", metrics.passwordChangeCountAsString()}};
 
         response.setMime(Net::Http::Mime::MediaType::fromString("application/json"));
         response.send(Http::Code::Ok, j.dump(2));
