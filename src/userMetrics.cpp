@@ -9,7 +9,7 @@ ait::kerberos::UserMetrics::UserMetrics(uint32_t passwordExpiration, uint32_t pr
                                                          passwordCreationDate_(creation),
                                                          lastSuccessfulLoginDate_(lastSuccess),
                                                          lastFailedLoginDate_(lastFailure),
-                                                         passwordChangeCount_(lastFailure),
+                                                         passwordChangeCount_(kvno),
                                                          passwordExpirationString_(""),
                                                          passwordCreationString_(""),
                                                          lastSuccessfulLoginString_(""),
