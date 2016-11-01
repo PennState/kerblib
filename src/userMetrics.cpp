@@ -75,7 +75,7 @@ uint32_t ait::kerberos::UserMetrics::lastFailedLogin() const {
 
 std::string ait::kerberos::UserMetrics::passwordChangeCountAsString() const {
   if (passwordChangeCountString_.empty())
-    passwordChangeCountString_ = toString(lastFailedLoginDate_);
+    passwordChangeCountString_ = toString(passwordChangeCount_);
 
   return passwordChangeCountString_;
 }
