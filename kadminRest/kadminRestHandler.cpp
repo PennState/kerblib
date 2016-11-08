@@ -163,6 +163,8 @@ class KadminRestHandler {
          response.send(Http::Code::Bad_Request, e.what());
       } catch(ait::kerberos::CommunicationException &e) {
          response.send(Http::Code::Internal_Server_Error);
+      } catch(ait::kerberos::UnableToFindUserException &e) {
+         response.send(Http::Code::Not_Found, e.what());
       }
       response.send(Http::Code::No_Content);
     }
