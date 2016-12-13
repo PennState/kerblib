@@ -45,86 +45,14 @@ namespace ait
           kadm5_principal_ent_rec principal;
           //krb5_error_code ret;
 
-          long mask = 0;
-
           memset((void *) &principal, '\0', sizeof(principal));
-
-          bool flagSet = false;
-          if (flags & ait::kerberos::DISALLOW_POSTDATED_TICKETS)
-          {
-            principal.attributes |= KRB5_KDB_DISALLOW_POSTDATED;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::DISALLOW_FORWARDABLE_TICKETS)
-          {
-            principal.attributes |= KRB5_KDB_DISALLOW_FORWARDABLE;
-            flagSet = true;
-          }
-          if (flags & ait::kerberos::DISALLOW_RENEWABLE_TICKETS)
-          {
-            principal.attributes |= KRB5_KDB_DISALLOW_RENEWABLE;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::DISALLOW_PROXIABLE_TICKETS)
-          {
-            principal.attributes |= KRB5_KDB_DISALLOW_PROXIABLE;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::DISALLOW_DUP_SKEY)
-          {
-            principal.attributes |= KRB5_KDB_DISALLOW_DUP_SKEY;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::REQUIRE_PREAUTH)
-          {
-            principal.attributes |= KRB5_KDB_REQUIRES_PRE_AUTH;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::REQUIRE_HWAUTH)
-          {
-            principal.attributes |= KRB5_KDB_REQUIRES_HW_AUTH;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::FORCE_CHANGE)
-          {
-            principal.attributes |= KRB5_KDB_REQUIRES_PWCHANGE;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::DISALLOW_SERVER_TICKETS)
-          {
-            principal.attributes |= KRB5_KDB_DISALLOW_SVR;
-            flagSet = true;
-          }
-
-          if (flags & ait::kerberos::REQUIRE_OK_AS_DELEGATE)
-          {
-            principal.attributes |= KRB5_KDB_OK_AS_DELEGATE;
-            flagSet = true;
-          }
-
-          if(flagSet) {
-            std::cout << "There are flags, setting the ATTRIBUTES mask" << std::endl;
-            mask |= KADM5_ATTRIBUTES;
-          }
-          else {
-            std::cout << "No flags this time" << std::endl;
-          }
-
-          mask |= KADM5_PRINCIPAL;
-          createUser(principal, mask, userID, password);
+          setFlags(principal, flags);
+          createUser(principal, userID, password);
         }
 
         void createUser(const std::string &userID, const std::string &password, const std::string &policy, uint32_t flags = 0x00000000)
         {
            kadm5_principal_ent_rec principal;
-         
 
            std::cout << "Clearing the principal" << std::endl;
            memset((void *) &principal, '\0', sizeof(principal));
@@ -133,22 +61,19 @@ namespace ait
            memset((void *) &policyString, '\0', sizeof(policyString));
            strncpy(policyString, policy.c_str(), policy.length());
          
-
            principal.policy = policyString;
          
-           kadm5_policy_ent_rec pol;
+          //kadm5_policy_ent_rec pol;
 
-           if (kadm5_get_policy(this->serverHandle_, policyString, &pol) != 0) {
-              std::cout << "Policy " << policyString << " does not exist" << std::endl;
-           } else {
-              std::cout << "Policy " << policyString << " does exist" << std::endl;
-              kadm5_free_policy_ent(this->serverHandle_, &pol);
-           } 
+          // if (kadm5_get_policy(this->serverHandle_, policyString, &pol) != 0) {
+          //    std::cout << "Policy " << policyString << " does not exist" << std::endl;
+          // } else {
+          //    std::cout << "Policy " << policyString << " does exist" << std::endl;
+          //    kadm5_free_policy_ent(this->serverHandle_, &pol);
+          // } 
 
-           long mask  = 0l | KADM5_POLICY;
-           mask |= KADM5_PRINCIPAL;
-
-           createUser(principal, mask, userID, password);
+           setFlags(principal, flags);
+           createUser(principal, userID, password);
         }
     
         UserMetrics getUserMetrics(const std::string &userID) const
@@ -286,8 +211,18 @@ namespace ait
           return principalData;
         }
 
-        void createUser(kadm5_principal_ent_rec &principal, long mask, const std::string &userID, const std::string &password)
+        void createUser(kadm5_principal_ent_rec &principal, const std::string &userID, const std::string &password)
         {
+           long mask = 0l;
+           if ((principal.attributes | 0x00000000) != 0) {
+             mask |= KADM5_ATTRIBUTES;
+           }
+
+           if (principal.policy != nullptr) {
+             mask  |= KADM5_POLICY;
+           }
+
+           mask |= KADM5_PRINCIPAL;
            if (userID.empty()) {
              throw InvalidUserException("Cannot create a principal with an empty userID");
            }
@@ -343,6 +278,58 @@ namespace ait
                break;
            }
         }
+ 
+        void setFlags(kadm5_principal_ent_rec &principal, uint32_t flags = 0x00000000) {
+
+          if (flags & ait::kerberos::DISALLOW_POSTDATED_TICKETS)
+          {
+            principal.attributes |= KRB5_KDB_DISALLOW_POSTDATED;
+          }
+
+          if (flags & ait::kerberos::DISALLOW_FORWARDABLE_TICKETS)
+          {
+            principal.attributes |= KRB5_KDB_DISALLOW_FORWARDABLE;
+          }
+          if (flags & ait::kerberos::DISALLOW_RENEWABLE_TICKETS)
+          {
+            principal.attributes |= KRB5_KDB_DISALLOW_RENEWABLE;
+          }
+
+          if (flags & ait::kerberos::DISALLOW_PROXIABLE_TICKETS)
+          {
+            principal.attributes |= KRB5_KDB_DISALLOW_PROXIABLE;
+          }
+
+          if (flags & ait::kerberos::DISALLOW_DUP_SKEY)
+          {
+            principal.attributes |= KRB5_KDB_DISALLOW_DUP_SKEY;
+          }
+
+          if (flags & ait::kerberos::REQUIRE_PREAUTH)
+          {
+            principal.attributes |= KRB5_KDB_REQUIRES_PRE_AUTH;
+          }
+
+          if (flags & ait::kerberos::REQUIRE_HWAUTH)
+          {
+            principal.attributes |= KRB5_KDB_REQUIRES_HW_AUTH;
+          }
+
+          if (flags & ait::kerberos::FORCE_CHANGE)
+          {
+            principal.attributes |= KRB5_KDB_REQUIRES_PWCHANGE;
+          }
+
+          if (flags & ait::kerberos::DISALLOW_SERVER_TICKETS)
+          {
+            principal.attributes |= KRB5_KDB_DISALLOW_SVR;
+          }
+
+          if (flags & ait::kerberos::REQUIRE_OK_AS_DELEGATE)
+          {
+            principal.attributes |= KRB5_KDB_OK_AS_DELEGATE;
+          }
+        } 
     };
   }
 }
