@@ -221,7 +221,8 @@ namespace ait
              mask |= KADM5_ATTRIBUTES;
            }
 
-           if (principal.policy != nullptr) {
+           std::cout << "Checking the policy " << principal.policy  << std::endl;
+           if (principal.policy != nullptr && strlen(principal.policy) > 0) {
              std::cout << "Setting the policy flag" << std::endl;
              mask  |= KADM5_POLICY;
            }
