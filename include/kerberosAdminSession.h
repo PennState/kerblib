@@ -214,15 +214,20 @@ namespace ait
         void createUser(kadm5_principal_ent_rec &principal, const std::string &userID, const std::string &password)
         {
            long mask = 0l;
+
+           std::cout << "In create principal, attributes = " << principal.attributes << std::endl;
            if ((principal.attributes | 0x00000000) != 0) {
+             std::cout << "Setting the attributes flag" << std::endl;
              mask |= KADM5_ATTRIBUTES;
            }
 
            if (principal.policy != nullptr) {
+             std::cout << "Setting the policy flag" << std::endl;
              mask  |= KADM5_POLICY;
            }
 
            mask |= KADM5_PRINCIPAL;
+
            if (userID.empty()) {
              throw InvalidUserException("Cannot create a principal with an empty userID");
            }
@@ -281,6 +286,7 @@ namespace ait
  
         void setFlags(kadm5_principal_ent_rec &principal, uint32_t flags = 0x00000000) {
 
+          std::cout << "Flags = " << flags << std::endl;
           if (flags & ait::kerberos::DISALLOW_POSTDATED_TICKETS)
           {
             principal.attributes |= KRB5_KDB_DISALLOW_POSTDATED;
@@ -305,8 +311,10 @@ namespace ait
             principal.attributes |= KRB5_KDB_DISALLOW_DUP_SKEY;
           }
 
+          std::cout << "Checking PREAUTH" << std::endl;
           if (flags & ait::kerberos::REQUIRE_PREAUTH)
           {
+            std::cout << "Setting Require PREAUTH" << std::endl;
             principal.attributes |= KRB5_KDB_REQUIRES_PRE_AUTH;
           }
 
