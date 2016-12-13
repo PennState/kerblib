@@ -117,6 +117,7 @@ namespace ait
 
           std::cout << "Received the principal" << std::endl;
           char pass[password.length() + 1];
+          memset((void *) &pass, '\0', sizeof(pass));
           strncpy(pass, password.c_str(), password.length());
           std::cout << "Calling kadm5_chpass_principal" << std::endl;
           kadm5_ret_t ret = kadm5_chpass_principal(this->serverHandle_, principalData.principal, pass);
