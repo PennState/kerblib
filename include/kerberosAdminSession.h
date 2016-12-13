@@ -85,12 +85,6 @@ namespace ait
             flagSet = true;
           }
 
-          if (flags & ait::kerberos::REQUIRE_PREAUTH)
-          {
-            principal.attributes |= KRB5_KDB_REQUIRES_PRE_AUTH;
-            flagSet = true;
-          }
-
           if (flags & ait::kerberos::REQUIRE_HWAUTH)
           {
             principal.attributes |= KRB5_KDB_REQUIRES_HW_AUTH;
@@ -127,7 +121,7 @@ namespace ait
           createUser(principal, mask, userID, password);
         }
 
-        void createUser(const std::string &userID, const std::string &password, const std::string &policy)
+        void createUser(const std::string &userID, const std::string &password, const std::string &policy, uint32_t flags = 0x00000000)
         {
            kadm5_principal_ent_rec principal;
          

@@ -79,9 +79,9 @@ class KadminRestHandler {
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
         if (policy != "none") {
-          kerbSession.createUser(userid, password, policy);
+          kerbSession.createUser(userid, password, policy, ait::kerberos::REQUIRE_PREAUTH);
         } else {
-          kerbSession.createUser(userid, password);
+          kerbSession.createUser(userid, password, ait::kerberos::REQUIRE_PREAUTH);
         }
       } catch (ait::kerberos::UserAlreadyExistsException &ex) {
         response.send(Http::Code::Conflict);
