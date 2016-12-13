@@ -217,9 +217,6 @@ class KadminRestHandler {
             } else {
               std::string password = val.substr(pos + 1);
 
-              std::cout << "------------> raw is " << val << std::endl;
-              std::cout << "------------> Password is " << password << " ***" << std::endl;
-
               try {
                 kerbSession.updateUserPassword(userid, password);
                 response.send(Http::Code::Ok, "User " + uid + " password changed");
