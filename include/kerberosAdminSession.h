@@ -128,7 +128,7 @@ namespace ait
               throw kerberos::UnableToFindUserException("Principal " + userID + " was not found");
               break;
             case KADM5_PASS_REUSE : 
-              throw kerberos::UnableToChangePasswordException("The password selected was used within three password change cycles");
+              throw kerberos::UnableToChangePasswordException("The password selected was in your password history");
               break;
             case KADM5_PASS_TOOSOON :                 
               throw kerberos::UnableToChangePasswordException("The current password is not sufficiently old to allow for change");
