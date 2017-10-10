@@ -167,6 +167,25 @@ namespace ait
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
         }
 
+        void lockPassword(const std::string &userID, const std::string why = "")
+        {
+          kadm5_principal_ent_rec principal;
+         
+          memset((void *) &principal, '\0', sizeof(principal));
+         
+          krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
+         
+          krb5_timestamp now;
+          krb5_timeofday(this->context_, &now);
+          principal.pw_expiration = now;
+         
+          std::stringstream str;
+          str << "Locking user " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
+          this->logMessage(str.str());
+
+          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
+        }
+
         void unlockUser(const std::string &userID, const std::string & why = "")
         {
           kadm5_principal_ent_rec principal;

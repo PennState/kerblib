@@ -191,6 +191,9 @@ class KadminRestHandler {
         if (action == "lock") {
           kerbSession.lockUser(uid); 
           response.send(Http::Code::Ok, "User " + uid + " locked");
+	} else if (action == "lockPassword") {
+          kerbSession.lockPassword(uid); 
+          response.send(Http::Code::Ok, "User " + uid + " locked");
         } else if (action == "unlock") {
           kerbSession.unlockUser(uid);
           response.send(Http::Code::Ok, "User " + uid + " unlocked");
