@@ -186,6 +186,44 @@ namespace ait
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
         }
 
+	/*  -- Supported formats for when
+	 *  yyyymmddhhmmss
+	 *  yyyy.mm.dd.hh.mm.ss
+         *  yymmddhhmmss
+         *  yy.mm.dd.hh.mm.ss
+         *  yymmddhhmm
+         *  hhmmss
+         *  hhmm 
+         *  hh:mm:ss 
+         *  hh:mm
+         *  -- The following not really supported unless native strptime present 
+         *  locale-dependent short format
+         *  dd-month-yyyy:hh:mm:ss
+         *  dd-month-yyyy:hh:mm 
+        */
+        void setPasswordExpiration(const std::string &userID, const std::string &when, const std::string why = "")
+        {
+          kadm5_principal_ent_rec principal;
+         
+          memset((void *) &principal, '\0', sizeof(principal));
+         
+          krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
+         
+	  //Convert to a non-const pointer
+          char timestamp[when.length() + 1];
+          memset((void *) &timestamp, '\0', sizeof(timestamp));
+          strncpy(timestamp, when.c_str(), when.length());
+          krb5_timestamp whenTimestamp;
+          krb5_string_to_timestamp(timestamp, &whenTimestamp);
+          principal.pw_expiration = whenTimestamp;
+         
+          std::stringstream str;
+          str << "Setting password expiration for " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
+          this->logMessage(str.str());
+
+          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
+        }
+
         void unlockUser(const std::string &userID, const std::string & why = "")
         {
           kadm5_principal_ent_rec principal;

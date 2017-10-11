@@ -56,6 +56,7 @@ class KadminRestHandler {
       Routes::Post(router_, "/resources/users/", Routes::bind(&KadminRestHandler::createUser, this));
       Routes::Get(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::getUserMetrics, this));
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
+      Routes::Put(router_, "/resources/users/:uid/.passwordExpiration", Routes::bind(&KadminRestHandler::setPasswordExpiration, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
     }
 
@@ -167,6 +168,29 @@ class KadminRestHandler {
          response.send(Http::Code::Not_Found, e.what());
       }
       response.send(Http::Code::No_Content);
+    }
+
+    void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
+
+      try {
+        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
+
+        std::string uid = request.param(":uid").as<std::string>();
+        const Http::Uri::Query& query = request.query();
+
+        Optional<std::string> optionalWhen  = query.get("when");
+
+	std::string when = optionalWhen.get();
+        if (optionalWhen.isEmpty()) {
+           response.send(Http::Code::Bad_Request, "Password Expiration changes must have the date desired");
+	}
+
+	kerbSession.setPasswordExpiration(uid, when);
+        response.send(Http::Code::Ok, "User " + uid + " password expiration changed to " + when);
+      } catch(...) {
+       //TODO - Fix this, this doesn't help
+       response.send(Http::Code::Internal_Server_Error, "Failed to set the password Expiration");
+      }
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
