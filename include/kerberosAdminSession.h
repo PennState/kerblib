@@ -183,7 +183,7 @@ namespace ait
           str << "Locking user " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
           this->logMessage(str.str());
 
-          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
+          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
         }
 
         void unlockUser(const std::string &userID, const std::string & why = "")
