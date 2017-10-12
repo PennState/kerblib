@@ -58,9 +58,8 @@ namespace ait
             principalString += "/fops.psu.edu";
           }
 
-
           char princ[principalString.length() + 1];
-          memset((void *) &princ, '\0', sizeof(principalString));
+          memset((void *) &princ, '\0', sizeof(princ));
           strncpy(princ, principalString.c_str(), principalString.length());
           kadm5_principal_ent_rec principal = getPrincipal(princ);
         }
