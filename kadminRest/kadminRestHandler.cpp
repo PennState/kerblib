@@ -55,6 +55,7 @@ class KadminRestHandler {
 
       Routes::Post(router_, "/resources/users/", Routes::bind(&KadminRestHandler::createUser, this));
       Routes::Get(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::getUserMetrics, this));
+      Routes::Get(router_, "/resources/healthcheck/", Routes::bind(&KadminRestHandler::doHealthCheck, this));
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
       Routes::Put(router_, "/resources/users/:uid/.passwordExpiration", Routes::bind(&KadminRestHandler::setPasswordExpiration, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
@@ -105,6 +106,19 @@ class KadminRestHandler {
       }
 
       response.send(Http::Code::Created);
+    }
+
+    void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
+      try {
+        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
+	kerbSession.healthCheck();
+      } catch(ait::kerberos::NotAuthorizedException &e) {
+         response.send(Http::Code::Forbidden);
+      } catch(ait::kerberos::CommunicationException &e) {
+         response.send(Http::Code::Internal_Server_Error);
+      } catch(ait::kerberos::UnableToFindUserException &e) {
+         response.send(Http::Code::Not_Found, e.what());
+      }
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {

@@ -50,6 +50,10 @@ namespace ait
           createUser(principal, userID, password);
         }
 
+	void healthCheck() {
+          kadm5_principal_ent_rec principal = getPrincipal(KRBTGT_PRINC);
+        }
+
         void createUser(const std::string &userID, const std::string &password, const std::string &policy, uint32_t flags = 0x00000000)
         {
            kadm5_principal_ent_rec principal;
@@ -243,6 +247,8 @@ namespace ait
         }
     
       private:
+        const char * KRBTGT_PRINC = "krbtgt";
+
         kadm5_principal_ent_rec getPrincipal(const std::string &userID) const
         {
           kadm5_principal_ent_rec principal;
