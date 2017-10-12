@@ -51,7 +51,18 @@ namespace ait
         }
 
 	void healthCheck() {
-          kadm5_principal_ent_rec principal = getPrincipal(KRBTGT_PRINC);
+          std::string principalString = KRBTGT_PRINC;
+	  if (this->realm_ == ACCESS) {
+            principalString += "/dce.psu.edu";
+          } else {
+            principalString += "/fops.psu.edu";
+          }
+
+
+          char princ[principalString.length() + 1];
+          memset((void *) &princ, '\0', sizeof(principalString));
+          strncpy(princ, principalString.c_str(), principalString.length());
+          kadm5_principal_ent_rec principal = getPrincipal(princ);
         }
 
         void createUser(const std::string &userID, const std::string &password, const std::string &policy, uint32_t flags = 0x00000000)
