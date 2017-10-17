@@ -112,6 +112,7 @@ class KadminRestHandler {
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 	kerbSession.healthCheck();
+        response.send(Http::Code::Ok);
       } catch(ait::kerberos::NotAuthorizedException &e) {
          response.send(Http::Code::Forbidden);
       } catch(ait::kerberos::CommunicationException &e) {
