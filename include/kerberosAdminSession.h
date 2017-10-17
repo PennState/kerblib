@@ -52,11 +52,11 @@ namespace ait
 
 	void healthCheck() {
           std::string principalString = KRBTGT_PRINC;
-	  if (this->realm_ == ACCESS) {
-            principalString += "/dce.psu.edu";
-          } else {
-            principalString += "/fops.psu.edu";
-          }
+          //if (this->realm_ == ACCESS) {
+          //  principalString += "/dce.psu.edu";
+          //} else {
+          //  principalString += "/fops.psu.edu";
+          //}
 
           char princ[principalString.length() + 1];
           memset((void *) &princ, '\0', sizeof(princ));
