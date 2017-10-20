@@ -200,7 +200,15 @@ class KadminRestHandler {
            response.send(Http::Code::Bad_Request, "Password Expiration changes must have the date desired");
 	}
 
-	kerbSession.setPasswordExpiration(uid, when);
+	try {
+          kerbSession.setPasswordExpiration(uid, when);
+        } catch(ait::kerberos::UnableToFindUserException &ex) {
+          response.send(Http::Code::Not_Found, "User not found");
+        } catch(ait::kerberos::UnauthorizedException &ex) {
+          response.send(Http::Code::Unauthorized, "Unauthorized");
+        } catch(ait::kerberos::SecurityRequestFailedException &ex) {
+          response.send(Http::Code::Bad_Request, ex.what());
+        }
         response.send(Http::Code::Ok, "User " + uid + " password expiration changed to " + when);
       } catch(...) {
        //TODO - Fix this, this doesn't help
