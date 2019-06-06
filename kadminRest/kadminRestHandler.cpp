@@ -85,6 +85,7 @@ class KadminRestHandler {
         } else {
           kerbSession.createUser(userid, password, ait::kerberos::REQUIRE_PREAUTH);
         }
+        response.send(Http::Code::Created);
       } catch (ait::kerberos::UserAlreadyExistsException &ex) {
         response.send(Http::Code::Conflict);
         return;
@@ -104,8 +105,6 @@ class KadminRestHandler {
         std::cout << "Unknown error received while attempting to create a user" << std::endl;
         response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
       }
-
-      response.send(Http::Code::Created);
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
@@ -173,6 +172,7 @@ class KadminRestHandler {
       
       try {
         kerbSession.deleteUser(uid);
+        response.send(Http::Code::No_Content);
       } catch(ait::kerberos::NotAuthorizedException &e) {
          response.send(Http::Code::Forbidden);
       } catch(ait::kerberos::UnableToDeletePrincipalException &e) {
@@ -182,7 +182,6 @@ class KadminRestHandler {
       } catch(ait::kerberos::UnableToFindUserException &e) {
          response.send(Http::Code::Not_Found, e.what());
       }
-      response.send(Http::Code::No_Content);
     }
 
     void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
