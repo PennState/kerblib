@@ -5,7 +5,7 @@
 #include "pistache/http_header.h"
 #include <iostream>
 
-using namespace Net;
+using namespace Pistache;
 
 class AuthorizationHeader : public Http::Header::Header {
   NAME("Authorization")

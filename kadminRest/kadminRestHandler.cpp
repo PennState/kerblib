@@ -19,14 +19,14 @@
 #include "loggers/consoleLogger.h"
 #include <arpa/inet.h>
 
-using namespace Net;
+//using namespace Pistache;
 
 class KadminRestHandler {
 
   public:
     const std::string PASSWORD_REQUIREMENTS_MESSAGE = "It must be at least eight characters in length (Longer is generally better.)\nIt must contain at least one alphabetic and one numeric character.\nIt must be significantly different from previous passwords.\nIt cannot be the same as the userid.\nIt cannot contain the following special characters - spaces, \', \", &, (, ), |, <, >.\nIt should not be information easily obtainable about you. This includes license plate, social security, telephone numbers, or street address";
 
-    KadminRestHandler(Net::Address addr, const std::string princ, std::string realm, std::string keytab) : httpEndpoint_(std::make_shared<Net::Http::Endpoint>(addr)),
+    KadminRestHandler(Pistache::Address addr, const std::string princ, std::string realm, std::string keytab) : httpEndpoint_(std::make_shared<Pistache::Http::Endpoint>(addr)),
                                                                                                            adminUser_(princ),
                                                                                                            realm_(realm),
                                                                                                            keytab_(keytab) {
@@ -34,8 +34,8 @@ class KadminRestHandler {
     }
 
     void init(int threads) {
-      auto opts = Net::Http::Endpoint::options().threads(threads)
-                                                .flags(Net::Tcp::Options::InstallSignalHandler);
+      auto opts = Pistache::Http::Endpoint::options().threads(threads)
+                                                .flags(Pistache::Tcp::Options::InstallSignalHandler);
       httpEndpoint_->init(opts);
       setupRoutes();
     }
@@ -51,7 +51,7 @@ class KadminRestHandler {
 
   private : 
     void setupRoutes() {
-      using namespace Net::Rest;
+      using namespace Pistache::Rest;
 
       Routes::Post(router_, "/resources/users/", Routes::bind(&KadminRestHandler::createUser, this));
       Routes::Get(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::getUserMetrics, this));
@@ -137,7 +137,7 @@ class KadminRestHandler {
            {"lastFailedLogin", metrics.lastFailedLoginAsString()},
            {"kvno", metrics.passwordChangeCount()}};
 
-        response.setMime(Net::Http::Mime::MediaType::fromString("application/json"));
+        response.setMime(Pistache::Http::Mime::MediaType::fromString("application/json"));
         response.send(Http::Code::Ok, j.dump(2));
       } catch(ait::kerberos::UnableToFindUserException &srfe) {
 	      response.send(Http::Code::Not_Found, srfe.what() + "\n");
@@ -291,7 +291,7 @@ class KadminRestHandler {
       }
     }
 
-    std::shared_ptr<Net::Http::Endpoint> httpEndpoint_;
+    std::shared_ptr<Pistache::Http::Endpoint> httpEndpoint_;
     Rest::Router router_;
    
     std::string adminUser_;
@@ -353,13 +353,13 @@ int main(int argc, char** argv) {
      return -1;
   }
 
-  Net::Address addr;
+  Pistache::Address addr;
 
   if (ipaddrSet) {
     ipaddr.sin_port = port;
-    addr = std::move(Net::Address::fromUnix((sockaddr *)&ipaddr));
+    addr = std::move(Pistache::Address::fromUnix((sockaddr *)&ipaddr));
   } else {
-    addr = std::move(Net::Address(Net::Ipv4::any(), Net::Port(port)));
+    addr = std::move(Pistache::Address(Pistache::Ipv4::any(), Pistache::Port(port)));
   }
 
   //Net::Address addr(ipv4, Net::Port(port));
