@@ -43,8 +43,8 @@ $(warning $(kadminRest_src))
 kadminRest : $(kadminRest_src)
 	$(CXX) -g -o bin/kadminRest $? $(CC_ARGS) -L./lib -lkrb_security -L$(COMMON_LIB_ROOT)/lib/ -lait_utilities -lait_communications 
 
-examples : $(examples_src)
-	$(CXX) -o bin/examples $< $(CC_ARGS) -L./lib -lkrb_security 
+#examples : $(examples_src)
+#	$(CXX) -o bin/examples $< $(CC_ARGS) -L./lib -lkrb_security 
 
 lib : $(lib_obj_files)
 	rm -f $(library_destination);
