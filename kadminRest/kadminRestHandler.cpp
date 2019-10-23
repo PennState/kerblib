@@ -357,7 +357,7 @@ int main(int argc, char** argv) {
 
   if (ipaddrSet) {
     ipaddr.sin_port = port;
-    ipaddr.sa_family = AF_INET;
+    ipaddr.sin_family = AF_INET;
     addr = std::move(Pistache::Address::fromUnix((sockaddr *)&ipaddr));
   } else {
     addr = std::move(Pistache::Address(Pistache::Ipv4::any(), Pistache::Port(port)));
