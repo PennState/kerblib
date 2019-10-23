@@ -18,9 +18,10 @@ examples_obj_files = $(examples_src:%.cpp=%.o)
 
 #loggers_obj_files = $(loggers_src:%.cpp=%.o)
 
-//library_destination = ./lib/libkrb_security.a
+#library_destination = ./lib/libkrb_security.a
 library_destination = /usr/local/lib/libkrb_security.a
 
+#CC_ARGS := -std=c++11 -Wall -I. -I./include -I/usr/local/include -I/usr/include/et -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lpistache  -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications -lboost_regex -Bdynamic -lkrb5 -lkadm5clnt 
 CC_ARGS := -std=c++11 -Wall -I. -I./include -I/usr/local/include -I/usr/include/et -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lpistache  -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications -lboost_regex -Bdynamic -lkrb5 -lkadm5clnt 
 
 .PHONY: src loggers lib adminLock adminUnlock kadminRest examples
