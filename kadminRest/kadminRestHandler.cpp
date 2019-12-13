@@ -237,7 +237,7 @@ class KadminRestHandler {
         if (action == "lock") {
           kerbSession.lockUser(uid); 
           response.send(Http::Code::Ok, "User " + uid + " locked");
-	} else if (action == "lockPassword") {
+	      } else if (action == "lockPassword") {
           kerbSession.lockPassword(uid); 
           response.send(Http::Code::Ok, "User " + uid + " locked");
         } else if (action == "unlock") {
@@ -245,7 +245,7 @@ class KadminRestHandler {
           response.send(Http::Code::Ok, "User " + uid + " unlocked");
         } else if (action == "pwchange") {
           std::cout << "Change password request received, trying to get the Authorization header" << std::endl;
-          auto auth = request.headers().tryGetRaw("Authorization");
+          auto auth = request.headers().tryGet<Http::Header::Authorization>();
 
           std::cout << "Check to see if auth is empty: " << auth.isEmpty() << std::endl;
           if (!auth.isEmpty()) {
