@@ -246,11 +246,8 @@ class KadminRestHandler {
         } else if (action == "pwchange") {
           std::cout << "Change password request received, trying to get the Authorization header" << std::endl;
           auto auth = request.headers().tryGet<Http::Header::Authorization>();
-
-          std::cout << "Check to see if auth is empty: " << auth.isEmpty() << std::endl;
-          if (!auth.isEmpty()) {
-            auto raw = auth.get();
-            std::string val = raw.value();
+          if (auth != NULL) {
+            std::string val = auth->value();
             std::string basic("Basic ");
             val = base64_decode(val.substr(basic.length()));
 
