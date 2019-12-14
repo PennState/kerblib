@@ -8,7 +8,6 @@
 #include "pistache/http.h"
 #include "pistache/http_headers.h"
 #include "pistache/mime.h"
-#include "authorizationHeader.h"
 #include "json.hpp"
 #include "base64.h"
 #include "unable_to_initialize_exception.h"
@@ -19,8 +18,8 @@
 #include "loggers/consoleLogger.h"
 #include <arpa/inet.h>
 
-//using namespace Pistache;
-
+using namespace Pistache;
+  
 class KadminRestHandler {
 
   public:
@@ -30,7 +29,7 @@ class KadminRestHandler {
                                                                                                            adminUser_(princ),
                                                                                                            realm_(realm),
                                                                                                            keytab_(keytab) {
-       //Net::Http::Header::Registry::registerHeader<AuthorizationHeader>();      
+      //Net::Http::Header::Registry::registerHeader<AuthorizationHeader>();                                                                                                    keytab_(keytab) {
     }
 
     void init(int threads) {
@@ -59,9 +58,16 @@ class KadminRestHandler {
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
       Routes::Put(router_, "/resources/users/:uid/.passwordExpiration", Routes::bind(&KadminRestHandler::setPasswordExpiration, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
+      Routes::Get(router_, "/", Routes::bind(&KadminRestHandler::catchAll, this));
+    }
+
+    void catchAll(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
+      response.send(Http::Code::Not_Found, "not found");
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
       std::string entity = request.body();
 
       nlohmann::json j = nlohmann::json::parse(entity);
@@ -108,9 +114,11 @@ class KadminRestHandler {
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
+
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
-	kerbSession.healthCheck();
+	      kerbSession.healthCheck();
         response.send(Http::Code::Ok);
       } catch(ait::kerberos::NotAuthorizedException &e) {
          response.send(Http::Code::Forbidden);
@@ -122,7 +130,8 @@ class KadminRestHandler {
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
-      
+      logRequest(request);
+
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -164,6 +173,8 @@ class KadminRestHandler {
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
+
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
       std::string uid = request.param(":uid").as<std::string>();
@@ -185,6 +196,7 @@ class KadminRestHandler {
     }
 
     void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
 
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -194,12 +206,12 @@ class KadminRestHandler {
 
         Optional<std::string> optionalWhen  = query.get("when");
 
-	std::string when = optionalWhen.get();
+	      std::string when = optionalWhen.get();
         if (optionalWhen.isEmpty()) {
            response.send(Http::Code::Bad_Request, "Password Expiration changes must have the date desired");
-	}
+	      }
 
-	try {
+        try {
           kerbSession.setPasswordExpiration(uid, when);
         } catch(ait::kerberos::UnableToFindUserException &ex) {
           response.send(Http::Code::Not_Found, "User not found");
@@ -210,12 +222,13 @@ class KadminRestHandler {
         }
         response.send(Http::Code::Ok, "User " + uid + " password expiration changed to " + when);
       } catch(...) {
-       //TODO - Fix this, this doesn't help
-       response.send(Http::Code::Internal_Server_Error, "Failed to set the password Expiration");
+        //TODO - Fix this, this doesn't help
+        response.send(Http::Code::Internal_Server_Error, "Failed to set the password Expiration");
       }
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
 
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -285,6 +298,7 @@ class KadminRestHandler {
 
         //response.send(Http::Code::Ok, "Executing action: " + action);
       } catch(...) {
+        response.send(Http::Code::Internal_Server_Error, "unknown error");
       }
     }
 
@@ -294,17 +308,32 @@ class KadminRestHandler {
     std::string adminUser_;
     std::string realm_;
     std::string keytab_;
+
+    void logRequest(const Rest::Request& r) {
+      auto xff = r.headers().tryGetRaw("X-Forwarded-For");
+      auto address = r.address();
+      auto resource = r.resource();
+      auto method = r.method();
+
+      std::string xff_str = "";
+      if (!xff.isEmpty()) {
+        xff_str = xff.get().value();
+      }
+      
+      std::cout<< "time=\""<<iso8601()<<"\" xff=\""<<xff_str<<"\" remote_addr="<<address.host()<<" method="<<method<<" resource="<<resource<<std::endl;
+    }
 };
 
 void usage()
 {
-  std::cout << "Usage:\nkadminRest -a adminPrincipal -k keytab -r kerbRealm [-p port] [-t threadCount]" << std::endl;
+  std::cout << "Usage:\nkadminRest -a <adminPrincipal> -k <keytab> -r <kerbRealm> [-p <port>] [-i <interface>] [-t <threads>]" << std::endl;
 }
 
 int main(int argc, char** argv) {
 
-  std::cout << "argc = " << argc << std::endl;
+  std::cout << "time=\"" << iso8601() << "\" Starting... " << std::endl;
   if (argc < 7) {
+    std::cerr<<"Not enough arguments"<<std::endl;
     usage();
     return -1;
   }
@@ -318,7 +347,7 @@ int main(int argc, char** argv) {
   int threads = 1;
 
   int option;
-  while ((option = getopt(argc, argv, "a:k:i:p:r:m:")) != -1)
+  while ((option = getopt(argc, argv, "a:k:i:p:r:t:")) != -1)
   {
     switch(option)
     {
@@ -345,7 +374,7 @@ int main(int argc, char** argv) {
   }
 
   if (adminPrincipal.empty() || keytab.empty() || realm.empty()) {
-     std::cerr << "Admin Principal, Keytab and Realm are required fields" << std::endl;
+     std::cerr << "Admin Principal, Keytab, and Realm are required fields" << std::endl;
      usage();
      return -1;
   }
@@ -360,11 +389,16 @@ int main(int argc, char** argv) {
     addr = std::move(Pistache::Address(Pistache::Ipv4::any(), Pistache::Port(port)));
   }
 
-  //Net::Address addr(ipv4, Net::Port(port));
+  std::cout<<"principal: "<<adminPrincipal<<std::endl;
+  std::cout<<"keytab: "<<keytab<<std::endl;
+  std::cout<<"realm: "<<realm<<std::endl;
+  std::cout<<"interface: "<<addr.host()<<std::endl;
+  std::cout<<"port: "<<port<<std::endl;
+  std::cout<<"threads: "<<threads<<std::endl;
 
   KadminRestHandler hrh(addr, adminPrincipal, realm, keytab);
   hrh.init(threads);
+  std::cout << "time=\"" << iso8601() << "\" Starting kadminrest server..."<<std::endl;
   hrh.start();
-
   hrh.shutdown();
 }
