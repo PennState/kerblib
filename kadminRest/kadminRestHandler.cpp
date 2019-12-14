@@ -311,17 +311,32 @@ class KadminRestHandler {
     std::string keytab_;
 
     void logRequest(const Rest::Request& r) {
-      auto xff = r.headers().tryGetRaw("X-Forwarded-For");
-      auto address = r.address();
-      auto resource = r.resource();
-      auto method = r.method();
+      auto ua = r.headers().tryGet<Http::Header::UserAgent>();
+      std::string ua_str = "";
+      if (ua != NULL) {
+        ua_str = ua->agent();
+      }
 
+      auto xff = r.headers().tryGetRaw("X-Forwarded-For");
       std::string xff_str = "";
       if (!xff.isEmpty()) {
         xff_str = xff.get().value();
       }
+
+      auto host = r.headers().tryGetRaw("Host");
+      std::string host_str = "";
+      if (!host.isEmpty()) {
+        host_str = host.get().value();
+      }
       
-      std::cout<< "time=\""<<iso8601()<<"\" xff=\""<<xff_str<<"\" remote_addr="<<address.host()<<" method="<<method<<" resource="<<resource<<std::endl;
+      std::cout << "time=\"" << iso8601() << "\""
+        << " addr=" << r.address().host()
+        << " xff=\"" << xff_str << "\""
+        << " host=\"" << host_str << "\""
+        << " method=" << r.method()
+        << " resource=" << r.resource()
+        << " ua=\"" <<ua_str << "\""
+        << std::endl;
     }
 };
 
