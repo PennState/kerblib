@@ -1,3 +1,7 @@
+BUILD_VERSION := $(shell git --no-pager describe --tags --always)
+BUILD_DATE := $(shell date --iso=seconds)
+BUILD_INFO := -DBUILD_VERSION=\"$(BUILD_VERSION)\" -DBUILD_DATE=\"$(BUILD_DATE)\"
+
 target_dir := ./obj
 
 lib_src_files := src/userMetrics.cpp
@@ -21,7 +25,7 @@ examples_obj_files = $(examples_src:%.cpp=%.o)
 library_destination = ./lib/libkrb_security.a
 #library_destination = /usr/local/lib/libkrb_security.a
 
-CC_ARGS := -std=c++14 -Wall -I. -I./include -I/usr/local/include -I/usr/include/et -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L./lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lpistache  -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications -Bdynamic -lkrb5 -lkadm5clnt 
+CC_ARGS := -std=c++14 -Wall -I. -I./include -I/usr/local/include -I/usr/include/et -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -I$(COMMON_LIB_ROOT)/c++/util -I$(COMMON_LIB_ROOT)/c++/networking -I$(COMMON_LIB_ROOT)/c++/exception -I$(COMMON_LIB_ROOT)/c++/communication/include -L./lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lpistache  -lpthread -L$(COMMON_LIB_ROOT)/lib -lait_utilities -lait_communications -Bdynamic -lkrb5 -lkadm5clnt $(BUILD_INFO)
 
 .PHONY: src loggers lib adminLock adminUnlock kadminRest examples
 

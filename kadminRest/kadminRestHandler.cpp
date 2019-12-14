@@ -19,7 +19,7 @@
 #include <arpa/inet.h>
 
 using namespace Pistache;
-  
+
 class KadminRestHandler {
 
   public:
@@ -55,11 +55,18 @@ class KadminRestHandler {
       Routes::Post(router_, "/resources/users/", Routes::bind(&KadminRestHandler::createUser, this));
       Routes::Get(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::getUserMetrics, this));
       Routes::Get(router_, "/resources/healthcheck/", Routes::bind(&KadminRestHandler::doHealthCheck, this));
+      Routes::Get(router_, "/resources/version/", Routes::bind(&KadminRestHandler::version, this));
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
       Routes::Put(router_, "/resources/users/:uid/.passwordExpiration", Routes::bind(&KadminRestHandler::setPasswordExpiration, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
       Routes::Get(router_, "/*", Routes::bind(&KadminRestHandler::catchAll, this));
       Routes::Get(router_, "/", Routes::bind(&KadminRestHandler::catchAll, this));
+    }
+
+    void version(const Rest::Request& request, Http::ResponseWriter response) {
+      logRequest(request);
+      std::string s = "version=\"" + std::string(BUILD_VERSION) + "\" builddate=\"" + std::string(BUILD_DATE) + "\"";
+      response.send(Http::Code::Ok, s.c_str());
     }
 
     void catchAll(const Rest::Request& request, Http::ResponseWriter response) {
@@ -347,7 +354,8 @@ void usage()
 
 int main(int argc, char** argv) {
 
-  std::cout << "time=\"" << iso8601() << "\" Starting... " << std::endl;
+  std::cout << "time=\"" << iso8601() 
+    << "\" msg=\"Starting kadminrest\" version=\"" << BUILD_VERSION << "\" builddate=\"" << BUILD_DATE << "\"" << std::endl;
   if (argc < 7) {
     std::cerr<<"Not enough arguments"<<std::endl;
     usage();
@@ -414,7 +422,7 @@ int main(int argc, char** argv) {
 
   KadminRestHandler hrh(addr, adminPrincipal, realm, keytab);
   hrh.init(threads);
-  std::cout << "time=\"" << iso8601() << "\" Starting kadminrest server..."<<std::endl;
+  std::cout << "time=\"" << iso8601() << "\" msg=\"Starting kadminrest server...\""<<std::endl;
   hrh.start();
   hrh.shutdown();
 }
