@@ -58,6 +58,7 @@ class KadminRestHandler {
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
       Routes::Put(router_, "/resources/users/:uid/.passwordExpiration", Routes::bind(&KadminRestHandler::setPasswordExpiration, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
+      Routes::Get(router_, "/*", Routes::bind(&KadminRestHandler::catchAll, this));
       Routes::Get(router_, "/", Routes::bind(&KadminRestHandler::catchAll, this));
     }
 
