@@ -57,6 +57,7 @@ namespace ait
           memset((void *) &princ, '\0', sizeof(princ));
           strncpy(princ, principalString.c_str(), principalString.length());
           kadm5_principal_ent_rec principal = getPrincipal(princ);
+          kadm5_free_principal_ent(this->serverHandle_, &principal);
         }
 
         void createUser(const std::string &userID, const std::string &password, const std::string &policy, uint32_t flags = 0x00000000)
@@ -87,13 +88,16 @@ namespace ait
         UserMetrics getUserMetrics(const std::string &userID) const
         {
           kadm5_principal_ent_rec principal = getPrincipal(userID);
-          return UserMetrics(principal.pw_expiration, principal.princ_expire_time, principal.last_pwd_change, principal.last_success, principal.last_failed, principal.kvno);
+          auto metrics = UserMetrics(principal.pw_expiration, principal.princ_expire_time, principal.last_pwd_change, principal.last_success, principal.last_failed, principal.kvno);
+          kadm5_free_principal_ent(this->serverHandle_, &principal);
+          return metrics;
         }
 
         void deleteUser(const std::string &userID)
         {
           kadm5_principal_ent_rec principalData = getPrincipal(userID);
           kadm5_ret_t ret = kadm5_delete_principal(this->serverHandle_, principalData.principal);
+          kadm5_free_principal_ent(this->serverHandle_, &principalData);
 
           switch (ret) {
             case KADM5_AUTH_DELETE :
@@ -124,6 +128,7 @@ namespace ait
           memset((void *) &pass, '\0', sizeof(pass));
           strncpy(pass, password.c_str(), password.length());
           kadm5_ret_t ret = kadm5_chpass_principal(this->serverHandle_, principalData.principal, pass);
+          kadm5_free_principal_ent(this->context_, &principalData);
 
           switch(ret) {
             case KADM5_UNK_PRINC :
