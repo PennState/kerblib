@@ -29,8 +29,7 @@ CC_ARGS := -std=c++14 -Wall -I. -I./include -I/usr/local/include -I/usr/include/
 
 .PHONY: src loggers lib adminLock adminUnlock kadminRest examples
 
-#all : src loggers lib adminLock adminUnlock kadminRest examples
-all : src lib adminLock adminUnlock kadminRest examples
+all : src lib kadminRest
 
 src : $(lib_src_files)
 	$(CXX) -c $< $(CC_ARGS)
