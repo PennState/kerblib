@@ -118,13 +118,13 @@ class KadminRestHandler {
 	      kerbSession.healthCheck();
         response.send(Http::Code::Ok);
       } catch(ait::kerberos::NotAuthorizedException &e) {
-         response.send(Http::Code::Forbidden);
+         response.send(Http::Code::Forbidden, e.what());
       } catch(ait::kerberos::CommunicationException &e) {
-         response.send(Http::Code::Internal_Server_Error);
+         response.send(Http::Code::Internal_Server_Error, e.what());
       } catch(ait::kerberos::UnableToFindUserException &e) {
          response.send(Http::Code::Not_Found, e.what());
       } catch(...) {
-        response.send(Http::Code::Internal_Server_Error);
+        response.send(Http::Code::Internal_Server_Error, "Unknown error");
       }
 
       logRequest(request, response.code());
@@ -151,15 +151,12 @@ class KadminRestHandler {
 	      response.send(Http::Code::Not_Found, srfe.what() + "\n");
       } catch(ait::kerberos::UserAlreadyExistsException &uaee) {
         std::string error = "User already Exists Exception " + uaee.what();
-        std::cerr << error << std::endl;
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::InvalidPasswordException &ipe) {
         std::string error = "Invalid password exception " + ipe.what();
-        std::cerr << error << std::endl;
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::UnableToCreateSessionException &utcse) {
         std::string error = "Unable to create session exception " + utcse.what();
-        std::cerr << error << std::endl;
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(UnableToInitializeException &utie) {
         std::string what = utie.what();
@@ -306,7 +303,7 @@ class KadminRestHandler {
     std::string realm_;
     std::string keytab_;
 
-    void logRequest(const Rest::Request& r, Http::Code c = Http::Code::I_m_a_teapot) {
+    void logRequest(const Rest::Request& r, Http::Code c = Http::Code::I_m_a_teapot, std::string msg = "") {
       auto ua = r.headers().tryGet<Http::Header::UserAgent>();
       std::string ua_str = "";
       if (ua != NULL) {
@@ -324,6 +321,11 @@ class KadminRestHandler {
       if (!host.isEmpty()) {
         host_str = host.get().value();
       }
+
+      std::string message = "";
+      if (msg != "") {
+          message = "msg=\"" + msg + "\"";
+      }
       
       std::cout << "time=\"" << iso8601() << "\""
         << " tid=" << std::this_thread::get_id()
@@ -334,6 +336,7 @@ class KadminRestHandler {
         << " status_code=" << static_cast<int>(c)
         << " resource=" << r.resource()
         << " ua=\"" <<ua_str << "\""
+        << message
         << std::endl;
     }
 };

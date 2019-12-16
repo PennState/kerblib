@@ -112,6 +112,7 @@ namespace ait
               break;
             default:
               //Assume Success
+              break;
           }
         }
 

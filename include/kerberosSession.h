@@ -127,7 +127,6 @@ namespace ait
                 message = "A GSS Error occured initializing";
                 break;
               default:
-                long l = (long)ret;
                 message = "Unknown error occured initializing, return = " + boost::lexical_cast<std::string>(ret);
                 //message = "Unknown error occured initializing, return = " + boost::lexical_cast<long>(ret);
                 break;
