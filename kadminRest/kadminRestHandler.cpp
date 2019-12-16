@@ -28,9 +28,7 @@ class KadminRestHandler {
     KadminRestHandler(Pistache::Address addr, const std::string princ, std::string realm, std::string keytab) : httpEndpoint_(std::make_shared<Pistache::Http::Endpoint>(addr)),
                                                                                                            adminUser_(princ),
                                                                                                            realm_(realm),
-                                                                                                           keytab_(keytab) {
-      //Net::Http::Header::Registry::registerHeader<AuthorizationHeader>();                                                                                                    keytab_(keytab) {
-    }
+                                                                                                           keytab_(keytab) {}
 
     void init(int threads) {
       auto opts = Pistache::Http::Endpoint::options().threads(threads);
@@ -64,18 +62,17 @@ class KadminRestHandler {
     }
 
     void version(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
       std::string s = "version=\"" + std::string(BUILD_VERSION) + "\" builddate=\"" + std::string(BUILD_DATE) + "\"";
       response.send(Http::Code::Ok, s.c_str());
+      logRequest(request, response.code());
     }
 
     void catchAll(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
       response.send(Http::Code::Not_Found, "not found");
+            logRequest(request, response.code());
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
       std::string entity = request.body();
 
       nlohmann::json j = nlohmann::json::parse(entity);
@@ -102,28 +99,23 @@ class KadminRestHandler {
         response.send(Http::Code::Created);
       } catch (ait::kerberos::UserAlreadyExistsException &ex) {
         response.send(Http::Code::Conflict);
-        return;
       } catch (ait::kerberos::InvalidPasswordException &ex) {
         response.send(Http::Code::Bad_Request, PASSWORD_REQUIREMENTS_MESSAGE);
-        return;
       } catch (ait::kerberos::SecurityRequestFailedException &ex) {
         response.send(Http::Code::Internal_Server_Error, "Contact the service desk");
-        return;
        } catch(ait::kerberos::InvalidRequestException &e) {
         response.send(Http::Code::Bad_Request, e.what());
-        return;
        }catch (ait::kerberos::NotAuthorizedException &e) {
         response.send(Http::Code::Forbidden);
-        return;
        }catch (...) {
         std::cout << "Unknown error received while attempting to create a user" << std::endl;
         response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
       }
+
+      logRequest(request, response.code());
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
-
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 	      kerbSession.healthCheck();
@@ -134,12 +126,14 @@ class KadminRestHandler {
          response.send(Http::Code::Internal_Server_Error);
       } catch(ait::kerberos::UnableToFindUserException &e) {
          response.send(Http::Code::Not_Found, e.what());
+      } catch(...) {
+        response.send(Http::Code::Internal_Server_Error);
       }
+
+      logRequest(request, response.code());
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
-
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -178,10 +172,11 @@ class KadminRestHandler {
       } catch(...) {
          std::cerr << "Unknown exception thrown" << std::endl;
       }
+
+      logRequest(request, response.code());
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
 
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -201,11 +196,11 @@ class KadminRestHandler {
       } catch(ait::kerberos::UnableToFindUserException &e) {
          response.send(Http::Code::Not_Found, e.what());
       }
+
+      logRequest(request, response.code());
     }
 
     void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
-
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -233,11 +228,11 @@ class KadminRestHandler {
         //TODO - Fix this, this doesn't help
         response.send(Http::Code::Internal_Server_Error, "Failed to set the password Expiration");
       }
+
+      logRequest(request, response.code());
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
-      logRequest(request);
-
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -275,6 +270,7 @@ class KadminRestHandler {
             std::size_t pos = val.find(":");
             if (pos == std::string::npos) {
               response.send(Http::Code::Bad_Request, "Header parameters malformed");
+              logRequest(request, response.code());
               return;
             }
 
@@ -308,6 +304,8 @@ class KadminRestHandler {
       } catch(...) {
         response.send(Http::Code::Internal_Server_Error, "unknown error");
       }
+
+      logRequest(request, response.code());
     }
 
     std::shared_ptr<Pistache::Http::Endpoint> httpEndpoint_;
@@ -317,7 +315,7 @@ class KadminRestHandler {
     std::string realm_;
     std::string keytab_;
 
-    void logRequest(const Rest::Request& r) {
+    void logRequest(const Rest::Request& r, Http::Code c = Http::Code::I_m_a_teapot) {
       auto ua = r.headers().tryGet<Http::Header::UserAgent>();
       std::string ua_str = "";
       if (ua != NULL) {
@@ -337,10 +335,12 @@ class KadminRestHandler {
       }
       
       std::cout << "time=\"" << iso8601() << "\""
+        << " tid=" << std::this_thread::get_id()
         << " addr=" << r.address().host()
         << " xff=\"" << xff_str << "\""
         << " host=\"" << host_str << "\""
         << " method=" << r.method()
+        << " status_code=" << static_cast<int>(c)
         << " resource=" << r.resource()
         << " ua=\"" <<ua_str << "\""
         << std::endl;
