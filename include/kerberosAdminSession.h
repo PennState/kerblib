@@ -51,14 +51,8 @@ namespace ait
           createUser(principal, userID, password);
         }
 
-    void healthCheck() {
+        void healthCheck() {
           std::string principalString = KRBTGT_PRINC;
-          //if (this->realm_ == ACCESS) {
-          //  principalString += "/dce.psu.edu";
-          //} else {
-          //  principalString += "/fops.psu.edu";
-          //}
-
           char princ[principalString.length() + 1];
           memset((void *) &princ, '\0', sizeof(princ));
           strncpy(princ, principalString.c_str(), principalString.length());
@@ -69,7 +63,6 @@ namespace ait
         {
            kadm5_principal_ent_rec principal;
 
-           std::cout << "Clearing the principal" << std::endl;
            memset((void *) &principal, '\0', sizeof(principal));
          
            char policyString[policy.length() + 1];
@@ -94,7 +87,6 @@ namespace ait
         UserMetrics getUserMetrics(const std::string &userID) const
         {
           kadm5_principal_ent_rec principal = getPrincipal(userID);
-          std::cout << "princ exp: " << principal.princ_expire_time << std::endl;
           return UserMetrics(principal.pw_expiration, principal.princ_expire_time, principal.last_pwd_change, principal.last_success, principal.last_failed, principal.kvno);
         }
 
@@ -120,23 +112,17 @@ namespace ait
               break;
             default:
               //Assume Success
-              std::cout << "Delete return = " << ret << std::endl;
           }
         }
 
         void updateUserPassword(const std::string &userID, const std::string &password)
         {
-          std::cout << "In updateUserPassword with userid " << userID << std::endl; // << " password " << password << std::endl;
-
           kadm5_principal_ent_rec principalData = getPrincipal(userID);
 
-          std::cout << "Received the principal" << std::endl;
           char pass[password.length() + 1];
           memset((void *) &pass, '\0', sizeof(pass));
           strncpy(pass, password.c_str(), password.length());
-          std::cout << "Calling kadm5_chpass_principal" << std::endl;
           kadm5_ret_t ret = kadm5_chpass_principal(this->serverHandle_, principalData.principal, pass);
-          std::cout << "Called kadm5_chpass_principal, checking the return value: " << ret << std::endl;
 
           switch(ret) {
             case KADM5_UNK_PRINC :
@@ -254,7 +240,6 @@ namespace ait
           //str << "Unlocking user " << userID << ", reason: " << why << ", unlock originated from IP Address " << ait::util::get_local_ip();
           std::string message = "Unlocking user " + userID + ", reason: " + why + ", unlock originated from IP Address " + ait::util::get_local_ip();
           this->logMessage(message);
-          std::cout << "---------> After the log send <-------------" << std::endl;
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
         }
     
@@ -291,15 +276,11 @@ namespace ait
         {
            long mask = 0l;
 
-           std::cout << "In create principal, attributes = " << principal.attributes << std::endl;
            if ((principal.attributes | 0x00000000) != 0) {
-             std::cout << "Setting the attributes flag" << std::endl;
              mask |= KADM5_ATTRIBUTES;
            }
 
-           std::cout << "Checking the policy " << principal.policy  << std::endl;
            if (principal.policy != nullptr && strlen(principal.policy) > 0) {
-             std::cout << "Setting the policy flag" << std::endl;
              mask  |= KADM5_POLICY;
            }
 
@@ -309,9 +290,7 @@ namespace ait
              throw InvalidUserException("Cannot create a principal with an empty userID");
            }
          
-           std::cout << "Parsing the name" << std::endl;
            krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
-           std::cout << "        Parsed the name" << std::endl;
          
            if (password.empty()) {
              throw InvalidPasswordException("Cannot create a principal with an empty password");
@@ -321,10 +300,8 @@ namespace ait
            memset((void *)pw, '\0', password.length() + 1);
            strncpy(pw, password.c_str(), password.length());
          
-           std::cout << "Calling create principal" << std::endl;
            //kadm5_ret_t ret = kadm5_create_principal(&(this->serverHandle_), &principal, mask, pw);
            kadm5_ret_t ret = kadm5_create_principal(this->serverHandle_, &principal, mask, pw);
-           std::cout << "        Called create principal, ret = " << ret << std::endl;
          
            switch(ret)
            {
@@ -356,7 +333,6 @@ namespace ait
                throw CommunicationException();
                break;
              default:
-               std::cout << "Error on the create " << ret << std::endl;
                break;
            }
         }
@@ -382,7 +358,6 @@ namespace ait
 
         void setFlags(kadm5_principal_ent_rec &principal, uint32_t flags = 0x00000000) {
 
-          std::cout << "Flags = " << flags << std::endl;
           if (flags & ait::kerberos::DISALLOW_POSTDATED_TICKETS)
           {
             principal.attributes |= KRB5_KDB_DISALLOW_POSTDATED;
@@ -407,10 +382,8 @@ namespace ait
             principal.attributes |= KRB5_KDB_DISALLOW_DUP_SKEY;
           }
 
-          std::cout << "Checking PREAUTH" << std::endl;
           if (flags & ait::kerberos::REQUIRE_PREAUTH)
           {
-            std::cout << "Setting Require PREAUTH" << std::endl;
             principal.attributes |= KRB5_KDB_REQUIRES_PRE_AUTH;
           }
 

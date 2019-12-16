@@ -90,7 +90,6 @@ namespace ait
             throw UnableToCreateSessionException("Unable to initialize credentials cache");
           }
 
-          std::cout << "Initializing with client " << client << " keytab " << kt << std::endl;
           ret = kadm5_init_with_skey(context_,
                                      client,
                                      kt,
@@ -107,27 +106,21 @@ namespace ait
             switch(ret)
             {
               case KADM5_NO_SRV:
-                std::cout << "No server" << std::endl;
                 message = "No server currently available";
                 break;
               case KADM5_RPC_ERROR:
-                std::cout << "An RPC Error occured" << std::endl;
                 message = "An RPC Error occured";
                 break;
               case KADM5_BAD_PASSWORD:
-                std::cout << "Invalid Password" << std::endl;
                 message = "Invalid Password";
                 break;
               case KADM5_SECURE_PRINC_MISSING:
-                std::cout << "The principal Admin Service or Change PW service does not exist" << std::endl;
                 message = "The principal Admin Service or Change PW service does not exist";
                 break;
               case KADM5_BAD_CLIENT_PARAMS:
-                std::cout << "There is an invalid field in the client paramters mask" << std::endl;
                 message = "There is an invalid field in the client paramters mask";
                 break;
               case KADM5_BAD_SERVER_PARAMS:
-                std::cout << "There is an invalid field in the server paramters mask" << std::endl;
                 message = "There is an invalid field in the server paramters mask";
                 break;
               case KADM5_GSS_ERROR :
@@ -135,7 +128,6 @@ namespace ait
                 break;
               default:
                 long l = (long)ret;
-                std::cout << "Unknown error occured initializing " << l << std::endl;
                 message = "Unknown error occured initializing, return = " + boost::lexical_cast<std::string>(ret);
                 //message = "Unknown error occured initializing, return = " + boost::lexical_cast<long>(ret);
                 break;
@@ -148,7 +140,6 @@ namespace ait
 
             throw UnableToCreateSessionException(message);
           } else {
-            std::cout << "Session established with skey" << std::endl;
           }
          
         

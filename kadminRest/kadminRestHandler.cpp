@@ -87,8 +87,6 @@ class KadminRestHandler {
         //Do nothing, use default policy
       }
 
-      std::cout << "Recieved a request to create user: " << userid << " with policy: " << policy << std::endl;
-
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
         if (policy != "none") {
@@ -108,7 +106,6 @@ class KadminRestHandler {
        }catch (ait::kerberos::NotAuthorizedException &e) {
         response.send(Http::Code::Forbidden);
        }catch (...) {
-        std::cout << "Unknown error received while attempting to create a user" << std::endl;
         response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
       }
 
@@ -141,36 +138,35 @@ class KadminRestHandler {
         ait::kerberos::UserMetrics metrics = kerbSession.getUserMetrics(uid);
 
         nlohmann::json j = {
-           {"passwordCreation", metrics.passwordCreationAsString()},
-           {"passwordExpiration", metrics.passwordExpirationAsString()},
-           {"principalExpiration", metrics.principalExpirationAsString()},
-           {"lastSuccessfulLogin", metrics.lastSuccessfulLoginAsString()},
-           {"lastFailedLogin", metrics.lastFailedLoginAsString()},
-           {"kvno", metrics.passwordChangeCount()}};
+          {"passwordCreation", metrics.passwordCreationAsString()},
+          {"passwordExpiration", metrics.passwordExpirationAsString()},
+          {"principalExpiration", metrics.principalExpirationAsString()},
+          {"lastSuccessfulLogin", metrics.lastSuccessfulLoginAsString()},
+          {"lastFailedLogin", metrics.lastFailedLoginAsString()},
+          {"kvno", metrics.passwordChangeCount()}};
 
         response.setMime(Pistache::Http::Mime::MediaType::fromString("application/json"));
         response.send(Http::Code::Ok, j.dump(2));
       } catch(ait::kerberos::UnableToFindUserException &srfe) {
 	      response.send(Http::Code::Not_Found, srfe.what() + "\n");
       } catch(ait::kerberos::UserAlreadyExistsException &uaee) {
-         std::string error = "User already Exists Exception " + uaee.what();
-         std::cerr << error << std::endl;
-         response.send(Http::Code::Internal_Server_Error, error + "\n");
+        std::string error = "User already Exists Exception " + uaee.what();
+        std::cerr << error << std::endl;
+        response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::InvalidPasswordException &ipe) {
-         std::string error = "Invalid password exception " + ipe.what();
-         std::cerr << error << std::endl;
-         response.send(Http::Code::Internal_Server_Error, error + "\n");
+        std::string error = "Invalid password exception " + ipe.what();
+        std::cerr << error << std::endl;
+        response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::UnableToCreateSessionException &utcse) {
-         std::string error = "Unable to create session exception " + utcse.what();
-         std::cerr << error << std::endl;
-         response.send(Http::Code::Internal_Server_Error, error + "\n");
+        std::string error = "Unable to create session exception " + utcse.what();
+        std::cerr << error << std::endl;
+        response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(UnableToInitializeException &utie) {
-         std::string what = utie.what();
-         std::string error = "Failed initialization: " + what;
-         std::cout << error << std::endl; 
-         response.send(Http::Code::Internal_Server_Error, error + "\n");
+        std::string what = utie.what();
+        std::string error = "Failed initialization: " + what;
+        response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(...) {
-         std::cerr << "Unknown exception thrown" << std::endl;
+        response.send(Http::Code::Internal_Server_Error, "\n");
       }
 
       logRequest(request, response.code());
@@ -181,8 +177,6 @@ class KadminRestHandler {
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
       std::string uid = request.param(":uid").as<std::string>();
-
-      std::cout << "Recieved a request to delete user: " << uid << std::endl;
       
       try {
         kerbSession.deleteUser(uid);
@@ -195,6 +189,8 @@ class KadminRestHandler {
          response.send(Http::Code::Internal_Server_Error);
       } catch(ait::kerberos::UnableToFindUserException &e) {
          response.send(Http::Code::Not_Found, e.what());
+      } catch(...) {
+        response.send(Http::Code::Internal_Server_Error);
       }
 
       logRequest(request, response.code());
@@ -248,8 +244,6 @@ class KadminRestHandler {
 
         auto action = queryParam.get();        
 
-        std::cout << "Recieved a request to alter user: " << uid << " action: " << action << std::endl;
-
         if (action == "lock") {
           kerbSession.lockUser(uid); 
           response.send(Http::Code::Ok, "User " + uid + " locked");
@@ -260,7 +254,6 @@ class KadminRestHandler {
           kerbSession.unlockUser(uid);
           response.send(Http::Code::Ok, "User " + uid + " unlocked");
         } else if (action == "pwchange") {
-          std::cout << "Change password request received, trying to get the Authorization header" << std::endl;
           auto auth = request.headers().tryGet<Http::Header::Authorization>();
           if (auth != NULL) {
             std::string val = auth->value();
@@ -292,12 +285,10 @@ class KadminRestHandler {
               }
             }
           } else {
-            response.send(Http::Code::Bad_Request, "Missing Auth Header Data");
-            std::cout << "Missing Auth Header Data" << std::endl;
+            response.send(Http::Code::Bad_Request, "Missing Authorization header");
           }
         } else {
             response.send(Http::Code::Bad_Request, ("Invalid User Action requested: " + action));
-            std::cout << "Invalid User Action requested: " << action << std::endl;
         }
 
         //response.send(Http::Code::Ok, "Executing action: " + action);
