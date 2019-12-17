@@ -205,14 +205,16 @@ class KadminRestHandler {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
         std::string uid = request.param(":uid").as<std::string>();
+
         const Http::Uri::Query& query = request.query();
-
         Optional<std::string> optionalWhen  = query.get("when");
-
-	      std::string when = optionalWhen.get();
         if (optionalWhen.isEmpty()) {
-           response.send(Http::Code::Bad_Request, "Password Expiration changes must have the date desired");
+          std::string msg = "Password Expiration changes must have the date desired";
+          response.send(Http::Code::Bad_Request, msg);
+          logRequest(request, response.code());
+          return;
 	      }
+        std::string when = optionalWhen.get();
 
         try {
           kerbSession.setPasswordExpiration(uid, when);
@@ -243,7 +245,10 @@ class KadminRestHandler {
         Optional<std::string> queryParam = query.get("userAction");
 
         if (queryParam.isEmpty()) {
-           response.send(Http::Code::Bad_Request, "Missing query parameter \"userAction\"");
+          auto msg = "Missing query parameter \"userAction\"";
+          response.send(Http::Code::Bad_Request, msg);
+          logRequest(request, response.code(), msg);
+          return;
         }
 
         auto action = queryParam.get();        
@@ -266,8 +271,9 @@ class KadminRestHandler {
 
             std::size_t pos = val.find(":");
             if (pos == std::string::npos) {
-              response.send(Http::Code::Bad_Request, "Header parameters malformed");
-              logRequest(request, response.code());
+              auto msg = "pwchange: Authorization header malformed";
+              response.send(Http::Code::Bad_Request, msg);
+              logRequest(request, response.code(), msg);
               return;
             }
 
@@ -289,13 +295,19 @@ class KadminRestHandler {
               }
             }
           } else {
-            response.send(Http::Code::Bad_Request, "Missing Authorization header");
+            response.send(Http::Code::Bad_Request, "pwchange: Missing Authorization header");
           }
         } else {
             response.send(Http::Code::Bad_Request, ("Invalid User Action requested: " + action));
         }
 
-        //response.send(Http::Code::Ok, "Executing action: " + action);
+        logRequest(request, response.code(), action);
+        return;
+
+      } catch (ait::kerberos::UnableToFindUserException& ex) {
+        response.send(Http::Code::Not_Found, ex.what()); 
+        logRequest(request, response.code(), ex.what());
+        return;
       } catch(...) {
         response.send(Http::Code::Internal_Server_Error, "unknown error");
       }
@@ -331,7 +343,7 @@ class KadminRestHandler {
 
       std::string message = "";
       if (msg != "") {
-          message = "msg=\"" + msg + "\"";
+          message = " msg=\"" + msg + "\"";
       }
       
       std::cout << "time=\"" << iso8601() << "\""
