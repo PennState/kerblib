@@ -46,7 +46,7 @@ namespace ait
         }
 
         void healthCheck() {
-          std::string principalString = KRBTGT_PRINC + "/" + this->realm_;
+          std::string principalString = KRBTGT_PRINC + "/" + this->realm_ + "@" + this->realm_;
           char princ[principalString.length() + 1];
           memset((void *) &princ, '\0', sizeof(princ));
           strncpy(princ, principalString.c_str(), principalString.length());
