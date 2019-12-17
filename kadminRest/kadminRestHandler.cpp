@@ -421,12 +421,13 @@ int main(int argc, char** argv) {
     addr = std::move(Pistache::Address(Pistache::Ipv4::any(), Pistache::Port(port)));
   }
 
-  std::cout<<"principal: "<<adminPrincipal<<std::endl;
-  std::cout<<"keytab: "<<keytab<<std::endl;
-  std::cout<<"realm: "<<realm<<std::endl;
-  std::cout<<"interface: "<<addr.host()<<std::endl;
-  std::cout<<"port: "<<port<<std::endl;
-  std::cout<<"threads: "<<threads<<std::endl;
+  std::cout<<"msg=\"Built configuration\" principal=\""<<adminPrincipal<<"\""
+    <<" keytab=\""<<keytab<<"\""
+    <<" realm=\""<<realm<<"\""
+    <<" interface=\""<<addr.host()<<"\""
+    <<" port="<<port
+    <<" threads="<<threads
+    <<std::endl;
 
   KadminRestHandler hrh(addr, adminPrincipal, realm, keytab);
   hrh.init(threads);
