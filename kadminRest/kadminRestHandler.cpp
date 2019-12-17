@@ -119,24 +119,33 @@ class KadminRestHandler {
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
+      std::string error;
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 	      kerbSession.healthCheck();
         response.send(Http::Code::Ok);
       } catch(ait::kerberos::NotAuthorizedException &e) {
-         response.send(Http::Code::Forbidden, e.what());
+        error = e.what();
+        response.send(Http::Code::Forbidden, error);
       } catch(ait::kerberos::CommunicationException &e) {
-         response.send(Http::Code::Internal_Server_Error, e.what());
+        error = e.what();
+        response.send(Http::Code::Internal_Server_Error, error);
       } catch(ait::kerberos::UnableToFindUserException &e) {
-         response.send(Http::Code::Not_Found, e.what());
+        error = e.what();
+        response.send(Http::Code::Not_Found, error);
+      } catch(ait::kerberos::UnableToCreateSessionException &utcse) {
+        error = utcse.what();
+        response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(...) {
-        response.send(Http::Code::Internal_Server_Error, "Unknown error");
+        error = "Unknown error";
+        response.send(Http::Code::Internal_Server_Error, error);
       }
 
-      logRequest(request, response.code());
+      logRequest(request, response.code(), error);
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
+      std::string error;
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -154,21 +163,22 @@ class KadminRestHandler {
         response.setMime(Pistache::Http::Mime::MediaType::fromString("application/json"));
         response.send(Http::Code::Ok, j.dump(2));
       } catch(ait::kerberos::UnableToFindUserException &srfe) {
-	      response.send(Http::Code::Not_Found, srfe.what() + "\n");
+        error = "Unable to find user" + srfe.what();
+	      response.send(Http::Code::Not_Found, error + "\n");
       } catch(ait::kerberos::UserAlreadyExistsException &uaee) {
-        std::string error = "User already Exists Exception " + uaee.what();
+        error = "User already Exists Exception " + uaee.what();
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::InvalidPasswordException &ipe) {
-        std::string error = "Invalid password exception " + ipe.what();
+        error = "Invalid password exception " + ipe.what();
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::UnableToCreateSessionException &utcse) {
-        std::string error = "Unable to create session exception " + utcse.what();
+        error = utcse.what();
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(...) {
         response.send(Http::Code::Internal_Server_Error, "\n");
       }
 
-      logRequest(request, response.code());
+      logRequest(request, response.code(), error);
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
