@@ -3,7 +3,6 @@
 
 #include <kadm5/admin.h>
 #include <inttypes.h>
-#include "networking.h"
 #include "kerberosSession.h"
 #include "kerberosAdminFlags.h"
 #include "userMetrics.h"
@@ -152,10 +151,6 @@ namespace ait
           krb5_timestamp now;
           krb5_timeofday(this->context_, &now);
           principal.princ_expire_time = now;
-         
-          std::stringstream str;
-          str << "Locking user " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
-          this->logMessage(str.str());
 
           kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
           validateModifyPrincipal(ret);
@@ -173,10 +168,6 @@ namespace ait
           krb5_timestamp now;
           krb5_timeofday(this->context_, &now);
           principal.pw_expiration = now;
-         
-          std::stringstream str;
-          str << "Locking user " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
-          this->logMessage(str.str());
 
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
           krb5_free_principal(this->context_, principal.principal);
@@ -212,10 +203,6 @@ namespace ait
           krb5_timestamp whenTimestamp;
           krb5_string_to_timestamp(timestamp, &whenTimestamp);
           principal.pw_expiration = whenTimestamp;
-         
-          std::stringstream str;
-          str << "Setting password expiration for " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
-          this->logMessage(str.str());
 
           kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
           validateModifyPrincipal(ret);
@@ -232,8 +219,6 @@ namespace ait
         
           principal.princ_expire_time = 0;
         
-          std::string message = "Unlocking user " + userID + ", reason: " + why + ", unlock originated from IP Address " + ait::util::get_local_ip();
-          this->logMessage(message);
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
           krb5_free_principal(this->context_, principal.principal);
         }
@@ -297,7 +282,7 @@ namespace ait
 
           kadm5_ret_t ret = kadm5_create_principal(this->serverHandle_, &principal, mask, pw);
           krb5_free_principal(this->context_, principal.principal);
-          
+
           switch(ret)
           {
             case KADM5_AUTH_ADD:

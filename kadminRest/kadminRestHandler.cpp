@@ -10,7 +10,6 @@
 #include "pistache/mime.h"
 #include "json.hpp"
 #include "base64.h"
-#include "unable_to_initialize_exception.h"
 #include "unableToChangePasswordException.h"
 #include "userAlreadyExistsException.h"
 #include "invalidPasswordException.h"
@@ -164,10 +163,6 @@ class KadminRestHandler {
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(ait::kerberos::UnableToCreateSessionException &utcse) {
         std::string error = "Unable to create session exception " + utcse.what();
-        response.send(Http::Code::Internal_Server_Error, error + "\n");
-      } catch(UnableToInitializeException &utie) {
-        std::string what = utie.what();
-        std::string error = "Failed initialization: " + what;
         response.send(Http::Code::Internal_Server_Error, error + "\n");
       } catch(...) {
         response.send(Http::Code::Internal_Server_Error, "\n");
