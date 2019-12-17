@@ -4,7 +4,6 @@
 #include <string>
 #include <krb5/krb5.h>
 #include "kerberosDefaults.h"
-#include "realmDefs.h"
 #include "unableToCreateSessionException.h"
 #include "kadm5/admin.h"
 //#include "adm_proto.h"
@@ -21,26 +20,9 @@ namespace ait
     class Session : public LOGGER
     {
       public:
-        Session(const std::string &clientString, ait::kerberos::Realm realm = ACCESS, const std::string &keytab = "")
-        {
-          switch(realm)
-          {
-            case FPS:
-              //if (keytab.empty())
-              //  keytab = look in expected fps keytab locale
-              init(clientString, "fops.psu.edu", keytab);
-              break;
-            case ACCESS:
-            default:
-              //if (keytab.empty())
-              //  keytab = look in expected fps keytab locale
-              init(clientString, "dce.psu.edu", keytab);
-              break;
-          }
-        }
-
         Session(const std::string &clientString, const std::string &realm, const std::string &keytab)
         {
+          realm_ = realm;
           init(clientString, realm, keytab);
         }
 
@@ -54,7 +36,7 @@ namespace ait
       protected:
         krb5_context context_;
         void *serverHandle_;
-        Realm realm_;
+        std::string realm_;
 
  
         void init(const std::string &clientString, const std::string &realm, const std::string &keytab) {

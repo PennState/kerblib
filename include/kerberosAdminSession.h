@@ -6,7 +6,6 @@
 #include "networking.h"
 #include "kerberosSession.h"
 #include "kerberosAdminFlags.h"
-#include "realmDefs.h"
 #include "userMetrics.h"
 #include "userAlreadyExistsException.h"
 #include "unableToChangePasswordException.h"
@@ -35,16 +34,12 @@ namespace ait
     class AdminSession : public Session<LOGGER>
     {
       public:
-        AdminSession(const std::string &clientString, ait::kerberos::Realm realm = ACCESS, const std::string &keytab = "") : ait::kerberos::Session<LOGGER>(clientString, realm, keytab)
-        {}
-
         AdminSession(const std::string &clientString, const std::string &realm, const std::string &keytab) : ait::kerberos::Session<LOGGER>(clientString, realm, keytab)
         {}
 
         void createUser(const std::string &userID, const std::string &password, uint32_t flags = 0x00000000)
         {
           kadm5_principal_ent_rec principal;
-          //krb5_error_code ret;
 
           memset((void *) &principal, '\0', sizeof(principal));
           setFlags(principal, flags);
@@ -52,7 +47,7 @@ namespace ait
         }
 
         void healthCheck() {
-          std::string principalString = KRBTGT_PRINC;
+          std::string principalString = KRBTGT_PRINC + "/" + this->realm_;
           char princ[principalString.length() + 1];
           memset((void *) &princ, '\0', sizeof(princ));
           strncpy(princ, principalString.c_str(), principalString.length());
@@ -250,7 +245,7 @@ namespace ait
         }
     
       private:
-        const char * KRBTGT_PRINC = "krbtgt";
+        const std::string KRBTGT_PRINC = "krbtgt";
 
         kadm5_principal_ent_rec getPrincipal(const std::string &userID) const
         {
