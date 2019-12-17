@@ -66,15 +66,6 @@ namespace ait
            strncpy(policyString, policy.c_str(), policy.length());
          
            principal.policy = policyString;
-         
-          //kadm5_policy_ent_rec pol;
-
-          // if (kadm5_get_policy(this->serverHandle_, policyString, &pol) != 0) {
-          //    std::cout << "Policy " << policyString << " does not exist" << std::endl;
-          // } else {
-          //    std::cout << "Policy " << policyString << " does exist" << std::endl;
-          //    kadm5_free_policy_ent(this->serverHandle_, &pol);
-          // } 
 
            setFlags(principal, flags);
            createUser(principal, userID, password);
@@ -168,6 +159,7 @@ namespace ait
 
           kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
           validateModifyPrincipal(ret);
+          krb5_free_principal(this->context_, principal.principal);
         }
 
         void lockPassword(const std::string &userID, const std::string why = "")
@@ -187,6 +179,7 @@ namespace ait
           this->logMessage(str.str());
 
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
+          krb5_free_principal(this->context_, principal.principal);
         }
 
         /*  -- Supported formats for when
@@ -224,7 +217,9 @@ namespace ait
           str << "Setting password expiration for " << userID << ", reason: " << why << ", Lock originated from IP Address " << ait::util::get_local_ip();
           this->logMessage(str.str());
 
-          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
+          kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
+          validateModifyPrincipal(ret);
+          krb5_free_principal(this->context_, principal.principal);
         }
 
         void unlockUser(const std::string &userID, const std::string & why = "")
@@ -237,11 +232,10 @@ namespace ait
         
           principal.princ_expire_time = 0;
         
-          //std::stringstream str;
-          //str << "Unlocking user " << userID << ", reason: " << why << ", unlock originated from IP Address " << ait::util::get_local_ip();
           std::string message = "Unlocking user " + userID + ", reason: " + why + ", unlock originated from IP Address " + ait::util::get_local_ip();
           this->logMessage(message);
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
+          krb5_free_principal(this->context_, principal.principal);
         }
     
       private:
@@ -275,67 +269,67 @@ namespace ait
 
         void createUser(kadm5_principal_ent_rec &principal, const std::string &userID, const std::string &password)
         {
-           long mask = 0l;
+          long mask = 0l;
 
-           if ((principal.attributes | 0x00000000) != 0) {
-             mask |= KADM5_ATTRIBUTES;
-           }
+          if ((principal.attributes | 0x00000000) != 0) {
+            mask |= KADM5_ATTRIBUTES;
+          }
 
-           if (principal.policy != nullptr && strlen(principal.policy) > 0) {
-             mask  |= KADM5_POLICY;
-           }
+          if (principal.policy != nullptr && strlen(principal.policy) > 0) {
+            mask  |= KADM5_POLICY;
+          }
 
-           mask |= KADM5_PRINCIPAL;
+          mask |= KADM5_PRINCIPAL;
 
-           if (userID.empty()) {
-             throw InvalidUserException("Cannot create a principal with an empty userID");
-           }
-         
-           krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
-         
-           if (password.empty()) {
-             throw InvalidPasswordException("Cannot create a principal with an empty password");
-           }
-         
-           char pw[password.length() + 1];
-           memset((void *)pw, '\0', password.length() + 1);
-           strncpy(pw, password.c_str(), password.length());
-         
-           //kadm5_ret_t ret = kadm5_create_principal(&(this->serverHandle_), &principal, mask, pw);
-           kadm5_ret_t ret = kadm5_create_principal(this->serverHandle_, &principal, mask, pw);
-         
-           switch(ret)
-           {
-             case KADM5_AUTH_ADD:
-                throw NotAuthorizedException();
-             case KADM5_DUP:
-               throw UserAlreadyExistsException(userID);
-               break;
-             case KADM5_PASS_Q_TOOSHORT:
-               throw InvalidPasswordException("The password you requested is too short");
-               break;
-             case KADM5_PASS_Q_DICT:
-               throw InvalidPasswordException("The password you requested is succeptible to a dictionary attack");
-               break;
-             case KADM5_PASS_Q_CLASS:
-               throw InvalidPasswordException("The password you requested is wrong because...");
-               break;
-             case KADM5_PASS_Q_GENERIC:
-               throw InvalidPasswordException("The password you requested is wrong because...");
-               break;
-             case KADM5_BAD_MASK:
-               throw SecurityRequestFailedException("Bad Mask on the create request");
-               break;
-             case KADM5_UNK_POLICY:
-               throw  InvalidRequestException("The requested Policy is unknown to the KDC");
-             case KADM5_BAD_SERVER_HANDLE:
-             case KADM5_GSS_ERROR:
-             case KADM5_RPC_ERROR:
-               throw CommunicationException();
-               break;
-             default:
-               break;
-           }
+          if (userID.empty()) {
+            throw InvalidUserException("Cannot create a principal with an empty userID");
+          }
+
+          krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
+
+          if (password.empty()) {
+            throw InvalidPasswordException("Cannot create a principal with an empty password");
+          }
+
+          char pw[password.length() + 1];
+          memset((void *)pw, '\0', password.length() + 1);
+          strncpy(pw, password.c_str(), password.length());
+
+          kadm5_ret_t ret = kadm5_create_principal(this->serverHandle_, &principal, mask, pw);
+          krb5_free_principal(this->context_, principal.principal);
+          
+          switch(ret)
+          {
+            case KADM5_AUTH_ADD:
+              throw NotAuthorizedException();
+            case KADM5_DUP:
+              throw UserAlreadyExistsException(userID);
+              break;
+            case KADM5_PASS_Q_TOOSHORT:
+              throw InvalidPasswordException("The password you requested is too short");
+              break;
+            case KADM5_PASS_Q_DICT:
+              throw InvalidPasswordException("The password you requested is succeptible to a dictionary attack");
+              break;
+            case KADM5_PASS_Q_CLASS:
+              throw InvalidPasswordException("The password you requested is wrong because...");
+              break;
+            case KADM5_PASS_Q_GENERIC:
+              throw InvalidPasswordException("The password you requested is wrong because...");
+              break;
+            case KADM5_BAD_MASK:
+              throw SecurityRequestFailedException("Bad Mask on the create request");
+              break;
+            case KADM5_UNK_POLICY:
+              throw  InvalidRequestException("The requested Policy is unknown to the KDC");
+            case KADM5_BAD_SERVER_HANDLE:
+            case KADM5_GSS_ERROR:
+            case KADM5_RPC_ERROR:
+              throw CommunicationException();
+              break;
+            default:
+              break;
+          }
         }
  
         void validateModifyPrincipal(kadm5_ret_t ret) {
