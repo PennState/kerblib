@@ -69,46 +69,53 @@ class KadminRestHandler {
 
     void catchAll(const Rest::Request& request, Http::ResponseWriter response) {
       response.send(Http::Code::Not_Found, "not found");
-            logRequest(request, response.code());
+      logRequest(request, response.code());
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
       std::string entity = request.body();
 
-      nlohmann::json j = nlohmann::json::parse(entity);
-
-      auto userid = j["userid"].get<std::string>();
-      auto password = j["password"].get<std::string>();
-      std::string policy = "none";
-
       try {
-        policy = j["policy"].get<std::string>();
-      } catch(std::domain_error &de) {
-        //Do nothing, use default policy
-      }
+        nlohmann::json j = nlohmann::json::parse(entity);
+        auto userid = j["userid"].get<std::string>();
+        auto password = j["password"].get<std::string>();
+        std::string policy = "";
 
-      try {
-        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
-        if (policy != "none") {
-          kerbSession.createUser(userid, password, policy, ait::kerberos::REQUIRE_PREAUTH);
-        } else {
-          kerbSession.createUser(userid, password, ait::kerberos::REQUIRE_PREAUTH);
+        try {
+          policy = j["policy"].get<std::string>();
+        } catch(...) {
+          //Do nothing, use default policy
         }
-        response.send(Http::Code::Created);
-      } catch (ait::kerberos::UserAlreadyExistsException &ex) {
-        response.send(Http::Code::Conflict);
-      } catch (ait::kerberos::InvalidPasswordException &ex) {
-        response.send(Http::Code::Bad_Request, PASSWORD_REQUIREMENTS_MESSAGE);
-      } catch (ait::kerberos::SecurityRequestFailedException &ex) {
-        response.send(Http::Code::Internal_Server_Error, "Contact the service desk");
-       } catch(ait::kerberos::InvalidRequestException &e) {
-        response.send(Http::Code::Bad_Request, e.what());
-       }catch (ait::kerberos::NotAuthorizedException &e) {
-        response.send(Http::Code::Forbidden);
-       }catch (...) {
-        response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
-      }
 
+        try {
+          ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
+          if (policy != "") {
+            kerbSession.createUser(userid, password, policy, ait::kerberos::REQUIRE_PREAUTH);
+          } else {
+            kerbSession.createUser(userid, password, ait::kerberos::REQUIRE_PREAUTH);
+          }
+          response.send(Http::Code::Created);
+        } catch (ait::kerberos::UserAlreadyExistsException &ex) {
+          response.send(Http::Code::Conflict);
+        } catch (ait::kerberos::InvalidPasswordException &ex) {
+          response.send(Http::Code::Bad_Request, PASSWORD_REQUIREMENTS_MESSAGE);
+        } catch (ait::kerberos::SecurityRequestFailedException &ex) {
+          response.send(Http::Code::Internal_Server_Error, "Contact the service desk");
+        } catch(ait::kerberos::InvalidRequestException &e) {
+          response.send(Http::Code::Bad_Request, e.what());
+        }catch (ait::kerberos::NotAuthorizedException &e) {
+          response.send(Http::Code::Forbidden);
+        }catch (...) {
+          response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
+        }
+
+      } catch(nlohmann::json::exception &e) {
+        std::string error = "Could not parse JSON data: " + std::string(e.what());
+        response.send(Http::Code::Bad_Request, error);
+        logRequest(request, response.code(), error);
+        return;
+      }
+      
       logRequest(request, response.code());
     }
 
