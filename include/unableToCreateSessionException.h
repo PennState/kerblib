@@ -18,7 +18,7 @@ namespace ait
     
        std::string what()
        {
-         return what_;
+         return "Unable to create session: " + what_;
        }
     
       private:
