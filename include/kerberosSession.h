@@ -100,7 +100,7 @@ namespace ait
                 message = "The principal Admin Service or Change PW service does not exist";
                 break;
               case KADM5_BAD_CLIENT_PARAMS:
-                message = "There is an invalid field in the client paramters mask";
+                message = "There is an invalid field in the client parameters mask";
                 break;
               case KADM5_BAD_SERVER_PARAMS:
                 message = "There is an invalid field in the server paramters mask";
@@ -110,19 +110,10 @@ namespace ait
                 break;
               default:
                 message = "Unknown error occured initializing, return = " + boost::lexical_cast<std::string>(ret);
-                //message = "Unknown error occured initializing, return = " + boost::lexical_cast<long>(ret);
                 break;
             }
-
-            #ifndef _AIX
-            //AIX currently has an issue with this call.  It results in a nast core dump
-            //com_err("kerberosSession", ret, "  initializing");
-            #endif
-
             throw UnableToCreateSessionException(message);
-          } else {
           }
-         
         
           ret = krb5_cc_close(context_, cc);
           if (ret) {
