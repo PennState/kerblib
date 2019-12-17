@@ -33,7 +33,7 @@ class ConsoleLogger
   public:
     void logMessage(const std::string &message)
     {
-      std::cout << "time=\"" << iso8601() << "\" " << message << std::endl;
+      std::cout << "time=\"" << iso8601() << "\" msg=\"" << message << "\"" << std::endl;
     }
 };
 
