@@ -172,7 +172,7 @@ namespace ait
           this->logMessage(str.str());
 
           kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
-      validateModifyPrincipal(ret);
+          validateModifyPrincipal(ret);
         }
 
         void lockPassword(const std::string &userID, const std::string why = "")
@@ -194,9 +194,9 @@ namespace ait
           kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
         }
 
-    /*  -- Supported formats for when
-     *  yyyymmddhhmmss
-     *  yyyy.mm.dd.hh.mm.ss
+        /*  -- Supported formats for when
+         *  yyyymmddhhmmss
+         *  yyyy.mm.dd.hh.mm.ss
          *  yymmddhhmmss
          *  yy.mm.dd.hh.mm.ss
          *  yymmddhhmm
@@ -217,7 +217,7 @@ namespace ait
          
           krb5_parse_name(this->context_, userID.c_str(), &(principal.principal));
          
-      //Convert to a non-const pointer
+          //Convert to a non-const pointer
           char timestamp[when.length() + 1];
           memset((void *) &timestamp, '\0', sizeof(timestamp));
           strncpy(timestamp, when.c_str(), when.length());
@@ -343,24 +343,24 @@ namespace ait
            }
         }
  
-      void validateModifyPrincipal(kadm5_ret_t ret) {
-         switch(ret) {
-           case KADM5_UNK_PRINC :
-             throw kerberos::UnableToFindUserException("Principal was not found");
-             break;
-           case KADM5_AUTH_MODIFY :
-             throw kerberos::UnauthorizedException("Not authorized for this function");
-             break;
-           case KADM5_BAD_CLIENT_PARAMS:
-           case KADM5_BAD_MASK:
-           case KADM5_UNK_POLICY:
-             throw kerberos::SecurityRequestFailedException("Either the Params, Mask or Policy is invalid");
-             break;
-           default:
-             //This should mean success
-             break;
+        void validateModifyPrincipal(kadm5_ret_t ret) {
+          switch(ret) {
+            case KADM5_UNK_PRINC :
+              throw kerberos::UnableToFindUserException("Principal was not found");
+              break;
+            case KADM5_AUTH_MODIFY :
+              throw kerberos::UnauthorizedException("Not authorized for this function");
+              break;
+            case KADM5_BAD_CLIENT_PARAMS:
+            case KADM5_BAD_MASK:
+            case KADM5_UNK_POLICY:
+              throw kerberos::SecurityRequestFailedException("Either the Params, Mask or Policy is invalid");
+              break;
+            default:
+              //This should mean success
+              break;
+          }
         }
-     }
 
         void setFlags(kadm5_principal_ent_rec &principal, uint32_t flags = 0x00000000) {
 
