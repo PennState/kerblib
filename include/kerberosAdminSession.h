@@ -237,6 +237,8 @@ namespace ait
           kadm5_principal_ent_rec principalData;
         
           kadm5_ret_t ret = kadm5_get_principal(this->serverHandle_, principal.principal, &principalData, KADM5_PRINCIPAL_NORMAL_MASK);
+
+          krb5_free_principal(this->context_, principal.principal);
         
           switch(ret)
           {
