@@ -72,6 +72,7 @@ class KadminRestHandler {
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
+      std::string msg = "";
       std::string entity = request.body();
 
       try {
@@ -94,28 +95,35 @@ class KadminRestHandler {
             kerbSession.createUser(userid, password, ait::kerberos::REQUIRE_PREAUTH);
           }
           response.send(Http::Code::Created);
+          msg = "User '" + userid + "' with policy '" + policy + "' created";
         } catch (ait::kerberos::UserAlreadyExistsException &ex) {
           response.send(Http::Code::Conflict);
+          msg = "User '" + userid + "' already exists";
         } catch (ait::kerberos::InvalidPasswordException &ex) {
           response.send(Http::Code::Bad_Request, PASSWORD_REQUIREMENTS_MESSAGE);
+          msg = "Invalid password for '" + userid + "': " + ex.what();
         } catch (ait::kerberos::SecurityRequestFailedException &ex) {
-          response.send(Http::Code::Internal_Server_Error, "Contact the service desk");
+          msg = "Create user '" + userid + "' failed because: " + ex.what(); 
+          response.send(Http::Code::Internal_Server_Error, msg);
         } catch(ait::kerberos::InvalidRequestException &e) {
+          msg = "Create user '" + userid + "' failed because: " + e.what();
           response.send(Http::Code::Bad_Request, e.what());
         }catch (ait::kerberos::NotAuthorizedException &e) {
+          msg = "Not authorized to create user '" + userid + "': " + e.what();
           response.send(Http::Code::Forbidden);
         }catch (...) {
+          msg = "Unknown error";
           response.send(Http::Code::Internal_Server_Error, "Unknown error received, contact the service desk");
         }
 
       } catch(nlohmann::json::exception &e) {
-        std::string error = "Could not parse JSON data: " + std::string(e.what());
-        response.send(Http::Code::Bad_Request, error);
-        logRequest(request, response.code(), error);
+        msg = "Could not parse JSON data: " + std::string(e.what());
+        response.send(Http::Code::Bad_Request, msg);
+        logRequest(request, response.code(), msg);
         return;
       }
       
-      logRequest(request, response.code());
+      logRequest(request, response.code(), msg);
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
