@@ -382,8 +382,8 @@ class KadminRestHandler {
         << " resource=" << r.resource()
         << " ua=\"" <<ua_str << "\""
         << message
-        << " spanId=" << spanid_str
-        << " traceId=" << traceid_str
+        << " spanId=\"" << spanid_str << "\""
+        << " traceId=\"" << traceid_str << "\""
         << std::endl;
     }
 };
