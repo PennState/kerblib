@@ -358,6 +358,18 @@ class KadminRestHandler {
       if (msg != "") {
           message = " msg=\"" + msg + "\"";
       }
+
+      // opentracing headers
+      std::string spanid_str = "";
+      auto spanid = r.headers().tryGetRaw("x-b3-spanid");
+      if (!spanid.isEmpty()) {
+        spanid_str = spanid.get().value();
+      }
+      std::string traceid_str = "";
+      auto traceid = r.headers().tryGetRaw("x-b3-traceid");
+      if (!traceid.isEmpty()) {
+        traceid_str = traceid.get().value();
+      }
       
       std::cout << "time=\"" << iso8601() << "\""
         << " version=\"" << BUILD_VERSION << "\""
@@ -370,6 +382,8 @@ class KadminRestHandler {
         << " resource=" << r.resource()
         << " ua=\"" <<ua_str << "\""
         << message
+        << " spanId=" << spanid_str
+        << " traceId=" << traceid_str
         << std::endl;
     }
 };
