@@ -153,8 +153,8 @@ namespace ait
           principal.princ_expire_time = now;
 
           kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
-          validateModifyPrincipal(ret);
           krb5_free_principal(this->context_, principal.principal);
+          validateModifyPrincipal(ret);
         }
 
         void lockPassword(const std::string &userID, const std::string why = "")
@@ -205,8 +205,8 @@ namespace ait
           principal.pw_expiration = whenTimestamp;
 
           kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
-          validateModifyPrincipal(ret);
           krb5_free_principal(this->context_, principal.principal);
+          validateModifyPrincipal(ret);
         }
 
         void unlockUser(const std::string &userID, const std::string & why = "")
