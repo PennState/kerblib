@@ -244,6 +244,7 @@ namespace ait
           {
             case KADM5_UNK_PRINC:
             {
+              kadm5_free_principal_ent(this->context_, &principalData);
               throw kerberos::UnableToFindUserException("Principal " + userID + " was not found");
               break;
             }
