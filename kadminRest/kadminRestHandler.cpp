@@ -16,6 +16,7 @@
 #include "securityRequestFailedException.h"
 #include "loggers/consoleLogger.h"
 #include <arpa/inet.h>
+#include <signal.h>
 
 using namespace Pistache;
 
@@ -38,7 +39,7 @@ class KadminRestHandler {
 
     void start() {
        httpEndpoint_->setHandler(router_.handler());
-       httpEndpoint_->serve();
+       httpEndpoint_->serveThreaded();
     }
    
     void shutdown() {
@@ -394,6 +395,16 @@ void usage()
 }
 
 int main(int argc, char** argv) {
+  // signal handling
+  sigset_t signals;
+    if (sigemptyset(&signals) != 0
+            || sigaddset(&signals, SIGTERM) != 0
+            || sigaddset(&signals, SIGINT) != 0
+            || sigaddset(&signals, SIGHUP) != 0
+            || pthread_sigmask(SIG_BLOCK, &signals, nullptr) != 0) {
+        perror("install signal handler failed");
+        return 1;
+    }
 
   std::cout << "time=\"" << iso8601() 
     << "\" msg=\"Starting kadminrest\" version=\"" << BUILD_VERSION << "\" builddate=\"" << BUILD_DATE << "\"" << std::endl;
@@ -451,6 +462,7 @@ int main(int argc, char** argv) {
     ipaddr.sin_family = AF_INET;
     addr = std::move(Pistache::Address::fromUnix((sockaddr *)&ipaddr));
   } else {
+    std::cout<<"msg=\"-i not specified, setting interface to listen on any address"<<std::endl;
     addr = std::move(Pistache::Address(Pistache::Ipv4::any(), Pistache::Port(port)));
   }
 
@@ -466,5 +478,13 @@ int main(int argc, char** argv) {
   hrh.init(threads);
   std::cout << "time=\"" << iso8601() << "\" msg=\"Starting kadminrest server...\""<<std::endl;
   hrh.start();
+
+  int signal = 0;
+  int status = sigwait(&signals, &signal);
+  if (status == 0) {
+    std::cout << "time=\"" << iso8601() << "\" msg=\"Received signal " << signal << "\"" << std::endl;
+  } else {
+    std::cout << "time=\"" << iso8601() << "\" msg=\"sigwait returns " << signal << "\"" << std::endl;
+  }
   hrh.shutdown();
 }
