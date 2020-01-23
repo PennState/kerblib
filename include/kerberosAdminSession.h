@@ -169,8 +169,9 @@ namespace ait
           krb5_timeofday(this->context_, &now);
           principal.pw_expiration = now;
 
-          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
+          kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PW_EXPIRATION);
           krb5_free_principal(this->context_, principal.principal);
+          validateModifyPrincipal(ret);
         }
 
         /*  -- Supported formats for when
@@ -219,8 +220,9 @@ namespace ait
         
           principal.princ_expire_time = 0;
         
-          kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
+          kadm5_ret_t ret = kadm5_modify_principal(this->serverHandle_, &principal, KADM5_PRINC_EXPIRE_TIME);
           krb5_free_principal(this->context_, principal.principal);
+          validateModifyPrincipal(ret);
         }
     
       private:
