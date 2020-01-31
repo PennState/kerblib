@@ -17,6 +17,7 @@
 #include "loggers/consoleLogger.h"
 #include <arpa/inet.h>
 #include <signal.h>
+#include <chrono>
 
 using namespace Pistache;
 
@@ -62,17 +63,21 @@ class KadminRestHandler {
     }
 
     void version(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
       std::string s = "version=\"" + std::string(BUILD_VERSION) + "\" builddate=\"" + std::string(BUILD_DATE) + "\"";
       response.send(Http::Code::Ok, s.c_str());
-      logRequest(request, response.code());
+      logRequest(request, response.code(), starttime);
     }
 
     void catchAll(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
       response.send(Http::Code::Not_Found, "not found");
-      logRequest(request, response.code());
+      logRequest(request, response.code(), starttime);
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
+
       std::string msg = "";
       std::string entity = request.body();
 
@@ -120,14 +125,15 @@ class KadminRestHandler {
       } catch(nlohmann::json::exception &e) {
         msg = "Could not parse JSON data: " + std::string(e.what());
         response.send(Http::Code::Bad_Request, msg);
-        logRequest(request, response.code(), msg);
+        logRequest(request, response.code(), starttime, msg);
         return;
       }
       
-      logRequest(request, response.code(), msg);
+      logRequest(request, response.code(), starttime, msg);
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
       std::string error;
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -150,10 +156,11 @@ class KadminRestHandler {
         response.send(Http::Code::Internal_Server_Error, error);
       }
 
-      logRequest(request, response.code(), error);
+      logRequest(request, response.code(), starttime, error);
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
       std::string error;
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -187,10 +194,11 @@ class KadminRestHandler {
         response.send(Http::Code::Internal_Server_Error, "\n");
       }
 
-      logRequest(request, response.code(), error);
+      logRequest(request, response.code(), starttime, error);
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
 
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -211,10 +219,11 @@ class KadminRestHandler {
         response.send(Http::Code::Internal_Server_Error);
       }
 
-      logRequest(request, response.code());
+      logRequest(request, response.code(), starttime);
     }
 
     void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -225,7 +234,7 @@ class KadminRestHandler {
         if (optionalWhen.isEmpty()) {
           std::string msg = "Password Expiration changes must have the date desired";
           response.send(Http::Code::Bad_Request, msg);
-          logRequest(request, response.code());
+          logRequest(request, response.code(), starttime);
           return;
 	      }
         std::string when = optionalWhen.get();
@@ -245,10 +254,11 @@ class KadminRestHandler {
         response.send(Http::Code::Internal_Server_Error, "Failed to set the password Expiration");
       }
 
-      logRequest(request, response.code());
+      logRequest(request, response.code(), starttime);
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now();
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
 
@@ -261,7 +271,7 @@ class KadminRestHandler {
         if (queryParam.isEmpty()) {
           auto msg = "Missing query parameter \"userAction\"";
           response.send(Http::Code::Bad_Request, msg);
-          logRequest(request, response.code(), msg);
+          logRequest(request, response.code(), starttime, msg);
           return;
         }
 
@@ -287,7 +297,7 @@ class KadminRestHandler {
             if (pos == std::string::npos) {
               auto msg = "pwchange: Authorization header malformed";
               response.send(Http::Code::Bad_Request, msg);
-              logRequest(request, response.code(), msg);
+              logRequest(request, response.code(), starttime, msg);
               return;
             }
 
@@ -315,18 +325,18 @@ class KadminRestHandler {
             response.send(Http::Code::Bad_Request, ("Invalid User Action requested: " + action));
         }
 
-        logRequest(request, response.code(), action);
+        logRequest(request, response.code(), starttime, action);
         return;
 
       } catch (ait::kerberos::UnableToFindUserException& ex) {
         response.send(Http::Code::Not_Found, ex.what()); 
-        logRequest(request, response.code(), ex.what());
+        logRequest(request, response.code(), starttime, ex.what());
         return;
       } catch(...) {
         response.send(Http::Code::Internal_Server_Error, "unknown error");
       }
 
-      logRequest(request, response.code());
+      logRequest(request, response.code(), starttime);
     }
 
     std::shared_ptr<Pistache::Http::Endpoint> httpEndpoint_;
@@ -336,7 +346,9 @@ class KadminRestHandler {
     std::string realm_;
     std::string keytab_;
 
-    void logRequest(const Rest::Request& r, Http::Code c = Http::Code::I_m_a_teapot, std::string msg = "") {
+    void logRequest(const Rest::Request& r, Http::Code c, std::chrono::steady_clock::time_point starttime, std::string msg = "") {
+      auto et = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - starttime).count();
+
       auto ua = r.headers().tryGet<Http::Header::UserAgent>();
       std::string ua_str = "";
       if (ua != NULL) {
@@ -380,6 +392,7 @@ class KadminRestHandler {
         << " host=\"" << host_str << "\""
         << " method=" << r.method()
         << " status_code=" << static_cast<int>(c)
+        << " et=\"" << et << "ms\""
         << " resource=" << r.resource()
         << " ua=\"" <<ua_str << "\""
         << message
