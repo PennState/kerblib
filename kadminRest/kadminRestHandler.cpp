@@ -495,9 +495,13 @@ int main(int argc, char** argv) {
   int signal = 0;
   int status = sigwait(&signals, &signal);
   if (status == 0) {
-    std::cout << "time=\"" << iso8601() << "\" msg=\"Received signal " << signal << "\"" << std::endl;
+    std::cout << "time=\"" << iso8601() << "\" msg=\"[1/3] Received signal " << signal << "\"" << std::endl;
   } else {
-    std::cout << "time=\"" << iso8601() << "\" msg=\"sigwait returns " << signal << "\"" << std::endl;
+    std::cout << "time=\"" << iso8601() << "\" msg=\"[1/3] sigwait returns " << signal << "\"" << std::endl;
   }
+  std::cout << "time=\"" << iso8601() << "\" msg=\"[2/3] shutting down...\"" << std::endl;
   hrh.shutdown();
+  std::cout << "time=\"" << iso8601() << "\" msg=\"[3/3] ...done\"" << std::endl;
+
+  return 0;
 }
