@@ -32,8 +32,10 @@ class KadminRestHandler {
                                                                                                            keytab_(keytab) {}
 
     void init(int threads) {
-      auto opts = Pistache::Http::Endpoint::options().threads(threads);
-                                                //.flags(Pistache::Tcp::Options::InstallSignalHandler);
+      auto opts = Pistache::Http::Endpoint::options()
+        .threads(threads)
+        .flags(Tcp::Options::ReuseAddr);
+
       httpEndpoint_->init(opts);
       setupRoutes();
     }
