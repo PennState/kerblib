@@ -20,10 +20,17 @@ namespace ait
     class Session : public LOGGER
     {
       public:
-        Session(const std::string &clientString, const std::string &realm, const std::string &keytab)
-        {
+        Session(const std::string &clientString, const std::string &realm, const std::string &keytab) {
           realm_ = realm;
-          init(clientString, realm, keytab);
+          try {
+            init(clientString, realm, keytab);
+          } catch (UnableToCreateSessionException &ex) {
+            krb5_free_context(context_);
+            if (serverHandle_) {
+              kadm5_destroy(serverHandle_);
+            }
+            throw;
+          }
         }
 
         ~Session() throw()
@@ -37,7 +44,6 @@ namespace ait
         krb5_context context_;
         void *serverHandle_;
         std::string realm_;
-
  
         void init(const std::string &clientString, const std::string &realm, const std::string &keytab) {
 
@@ -109,7 +115,10 @@ namespace ait
                 message = "A GSS Error occured initializing";
                 break;
               default:
-                message = "Unknown error occured initializing, return = " + boost::lexical_cast<std::string>(ret);
+                auto krb5_err = krb5_get_error_message(context_, ret);
+                std::string krb5_err_str(krb5_err);
+                krb5_free_error_message(krb5_err);
+                message = krb5_err_str + " (" + boost::lexical_cast<std::string>(ret) + ")";
                 break;
             }
             throw UnableToCreateSessionException(message);
