@@ -117,7 +117,7 @@ namespace ait
               default:
                 auto krb5_err = krb5_get_error_message(context_, ret);
                 std::string krb5_err_str(krb5_err);
-                krb5_free_error_message(krb5_err);
+                krb5_free_error_message(context_, krb5_err);
                 message = krb5_err_str + " (" + boost::lexical_cast<std::string>(ret) + ")";
                 break;
             }
