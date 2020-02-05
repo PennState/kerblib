@@ -26,10 +26,11 @@ class KadminRestHandler {
   public:
     const std::string PASSWORD_REQUIREMENTS_MESSAGE = "It must be at least eight characters in length (Longer is generally better.)\nIt must contain at least one alphabetic and one numeric character.\nIt must be significantly different from previous passwords.\nIt cannot be the same as the userid.\nIt cannot contain the following special characters - spaces, \', \", &, (, ), |, <, >.\nIt should not be information easily obtainable about you. This includes license plate, social security, telephone numbers, or street address";
 
-    KadminRestHandler(Pistache::Address addr, const std::string princ, std::string realm, std::string keytab) : httpEndpoint_(std::make_shared<Pistache::Http::Endpoint>(addr)),
+    KadminRestHandler(Pistache::Address addr, const std::string princ, std::string realm, std::string keytab, std::chrono::seconds timeout) : httpEndpoint_(std::make_shared<Pistache::Http::Endpoint>(addr)),
                                                                                                            adminUser_(princ),
                                                                                                            realm_(realm),
-                                                                                                           keytab_(keytab) {}
+                                                                                                           keytab_(keytab),
+                                                                                                           timeout_(timeout) {}
 
     void init(int threads) {
       auto opts = Pistache::Http::Endpoint::options()
@@ -47,6 +48,13 @@ class KadminRestHandler {
    
     void shutdown() {
       httpEndpoint_->shutdown();
+    }
+
+    void onTimeout(const Rest::Request& request, Http::ResponseWriter response) {
+      auto starttime = std::chrono::steady_clock::now() - std::chrono::seconds(timeout_); // kludgey!
+      auto msg = "timeout waiting for KDC after" + boost::lexical_cast<std::string>(timeout_.count()) + "s";
+      response.send(Http::Code::Internal_Server_Error, msg);
+      logRequest(request, response.code(), starttime, msg);
     }
 
   private : 
@@ -78,6 +86,7 @@ class KadminRestHandler {
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
+      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
 
       std::string msg = "";
@@ -135,6 +144,7 @@ class KadminRestHandler {
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
+      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       std::string error;
       try {
@@ -162,6 +172,7 @@ class KadminRestHandler {
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
+      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       std::string error;
       try {
@@ -200,6 +211,7 @@ class KadminRestHandler {
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
+      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
 
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -225,6 +237,7 @@ class KadminRestHandler {
     }
 
     void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
+      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -260,6 +273,7 @@ class KadminRestHandler {
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
+      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -347,6 +361,7 @@ class KadminRestHandler {
     std::string adminUser_;
     std::string realm_;
     std::string keytab_;
+    std::chrono::seconds timeout_;
 
     void logRequest(const Rest::Request& r, Http::Code c, std::chrono::steady_clock::time_point starttime, std::string msg = "") {
       auto et = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - starttime).count();
@@ -406,7 +421,7 @@ class KadminRestHandler {
 
 void usage()
 {
-  std::cout << "Usage:\nkadminRest -a <adminPrincipal> -k <keytab> -r <kerbRealm> [-p <port>] [-i <interface>] [-t <threads>]" << std::endl;
+  std::cout << "Usage:\nkadminRest -a <adminPrincipal> -k <keytab> -r <kerbRealm> [-p <port>] [-i <interface>] [-t <threads>] [-w <timeout>]" << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -436,9 +451,10 @@ int main(int argc, char** argv) {
   bool ipaddrSet = false;
   int port = 9080;
   int threads = 1;
+  int timeout = 10;
 
   int option;
-  while ((option = getopt(argc, argv, "a:k:i:p:r:t:")) != -1)
+  while ((option = getopt(argc, argv, "a:k:i:p:r:t:w:")) != -1)
   {
     switch(option)
     {
@@ -460,6 +476,9 @@ int main(int argc, char** argv) {
         break;
       case 't' :
         threads = std::stoi(optarg);
+        break;
+      case 'w' :
+        timeout = std::stoi(optarg);
         break;
     }
   }
@@ -487,9 +506,10 @@ int main(int argc, char** argv) {
     <<" interface=\""<<addr.host()<<"\""
     <<" port="<<port
     <<" threads="<<threads
+    <<" timeout="<<timeout
     <<std::endl;
 
-  KadminRestHandler hrh(addr, adminPrincipal, realm, keytab);
+  KadminRestHandler hrh(addr, adminPrincipal, realm, keytab, std::chrono::seconds(timeout));
   hrh.init(threads);
   std::cout << "time=\"" << iso8601() << "\" msg=\"Starting kadminrest server...\""<<std::endl;
   hrh.start();
