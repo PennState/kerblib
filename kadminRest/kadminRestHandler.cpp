@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <chrono>
+#include <memory>
 
 using namespace Pistache;
 
@@ -67,6 +68,7 @@ class KadminRestHandler {
       Routes::Get(router_, "/resources/version/", Routes::bind(&KadminRestHandler::version, this));
       Routes::Put(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::alterUser, this));
       Routes::Put(router_, "/resources/users/:uid/.passwordExpiration", Routes::bind(&KadminRestHandler::setPasswordExpiration, this));
+      Routes::Put(router_, "/resources/users/:uid/.passwordPolicy", Routes::bind(&KadminRestHandler::setPasswordPolicy, this));
       Routes::Delete(router_, "/resources/users/:uid", Routes::bind(&KadminRestHandler::deleteUser, this));
       Routes::Get(router_, "/*", Routes::bind(&KadminRestHandler::catchAll, this));
       Routes::Get(router_, "/", Routes::bind(&KadminRestHandler::catchAll, this));
@@ -269,6 +271,56 @@ class KadminRestHandler {
         response.send(Http::Code::Internal_Server_Error, "Failed to set the password Expiration");
       }
 
+      logRequest(request, response.code(), starttime);
+    }
+
+    void setPasswordPolicy(const Rest::Request& request, Http::ResponseWriter response)
+    {
+      response.timeoutAfter(timeout_);
+      auto starttime = std::chrono::steady_clock::now();
+      Http::Code code = Http::Code::Ok;
+      std::string message = "";
+      std::string uid;
+
+      try {
+        ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
+        uid = request.param(":uid").as<std::string>();
+        const Http::Uri::Query& query = request.query();
+        Optional<std::string> optionalPolicy = query.get("policy");
+
+        if (!optionalPolicy.isEmpty()) {
+          std::string policy = optionalPolicy.get();
+          std::string when = query.get("when").getOrElse("");
+
+          kerbSession.updateUserPasswordPolicy(uid, policy, when);
+
+          message = "Policy for user '" + uid + "' was successfuly set to '" + policy + "'";
+
+          if (when != "") {
+            message += " with expiration of " + when;
+          }
+        } else {
+          code = Http::Code::Bad_Request;
+          message = "Password Policy changes must provide a policy";
+        }
+      } catch(ait::kerberos::UnableToFindUserException &ex) {
+        code = Http::Code::Not_Found;
+        message = "User not found: " + uid;
+      } catch(ait::kerberos::UnauthorizedException &ex) {
+        code = Http::Code::Unauthorized;
+        message = "Unauthorized";
+      } catch(ait::kerberos::SecurityRequestFailedException &ex) {
+        code = Http::Code::Bad_Request;
+        message = ex.what();
+      } catch (...) {
+        code = Http::Code::Internal_Server_Error;
+        message = "Failed to set the password Policy";
+      }
+      if (message == "") {
+        response.send(code);
+      } else {
+        response.send(code, message);
+      }
       logRequest(request, response.code(), starttime);
     }
 
