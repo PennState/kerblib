@@ -140,6 +140,41 @@ namespace ait
           }
         }
 
+        void updateUserPasswordPolicy(const std::string &userID, const std::string &policy, const std::string &when)
+        {
+          kadm5_principal_ent_rec principal = getPrincipal(userID);
+          int policyLength = policy.length();
+          char policyString[policyLength + 1] = {0};
+          kadm5_policy_ent_rec policyEntity = {0};
+          kadm5_ret_t ret;
+
+          strncpy(policyString, policy.c_str(), policyLength);
+
+          ret = kadm5_get_policy(this->serverHandle_, policyString, &policyEntity);
+
+          kadm5_free_policy_ent(this->serverHandle_, &policyEntity);
+          validateModifyPrincipal(ret); // repurposing this method, nothing to see here
+
+          principal.policy = policyString;
+          int flags = KADM5_POLICY;
+
+          if (when != "") {
+            flags |= KADM5_PW_EXPIRATION;
+            int whenLength = when.length();
+            char timestamp[whenLength + 1] = {0};
+
+            strncpy(timestamp, when.c_str(), whenLength);
+
+            krb5_timestamp whenTimestamp;
+            krb5_string_to_timestamp(timestamp, &whenTimestamp);
+            principal.pw_expiration = whenTimestamp;
+          }
+          ret = kadm5_modify_principal(this->serverHandle_, &principal, flags);
+
+          kadm5_free_principal_ent(this->context_, &principal);
+          validateModifyPrincipal(ret);
+        }
+
         void lockUser(const std::string &userID, const std::string why = "")
         {
           kadm5_principal_ent_rec principal;
