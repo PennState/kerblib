@@ -321,7 +321,7 @@ class KadminRestHandler {
       } else {
         response.send(code, message);
       }
-      logRequest(request, response.code(), starttime);
+      logRequest(request, response.code(), starttime, message);
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
