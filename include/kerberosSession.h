@@ -22,15 +22,7 @@ namespace ait
       public:
         Session(const std::string &clientString, const std::string &realm, const std::string &keytab) {
           realm_ = realm;
-          try {
-            init(clientString, realm, keytab);
-          } catch (UnableToCreateSessionException &ex) {
-            krb5_free_context(context_);
-            if (serverHandle_) {
-              kadm5_destroy(serverHandle_);
-            }
-            throw;
-          }
+          init(clientString, realm, keytab);
         }
 
         ~Session() throw()
@@ -118,7 +110,7 @@ namespace ait
                 auto krb5_err = krb5_get_error_message(context_, ret);
                 std::string krb5_err_str(krb5_err);
                 krb5_free_error_message(context_, krb5_err);
-                message = krb5_err_str + " (" + boost::lexical_cast<std::string>(ret) + ")";
+                message = "Unknown error occured during kadm5_init_with_skey(): " + krb5_err_str + "(" + boost::lexical_cast<std::string>(ret) + ")";
                 break;
             }
             throw UnableToCreateSessionException(message);

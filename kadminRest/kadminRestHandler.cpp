@@ -51,13 +51,6 @@ class KadminRestHandler {
       httpEndpoint_->shutdown();
     }
 
-    void onTimeout(const Rest::Request& request, Http::ResponseWriter response) {
-      auto starttime = std::chrono::steady_clock::now() - std::chrono::seconds(timeout_); // kludgey!
-      auto msg = "timeout waiting for KDC after" + boost::lexical_cast<std::string>(timeout_.count()) + "s";
-      response.send(Http::Code::Internal_Server_Error, msg);
-      logRequest(request, response.code(), starttime, msg);
-    }
-
   private : 
     void setupRoutes() {
       using namespace Pistache::Rest;
@@ -88,7 +81,6 @@ class KadminRestHandler {
     }
 
     void createUser(const Rest::Request& request, Http::ResponseWriter response) {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
 
       std::string msg = "";
@@ -146,7 +138,6 @@ class KadminRestHandler {
     }
 
     void doHealthCheck(const Rest::Request& request, Http::ResponseWriter response) {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       std::string error;
       try {
@@ -174,7 +165,6 @@ class KadminRestHandler {
     }
 
     void getUserMetrics(const Rest::Request& request, Http::ResponseWriter response) {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       std::string error;
       try {
@@ -213,7 +203,6 @@ class KadminRestHandler {
     }
 
     void deleteUser(const Rest::Request& request, Http::ResponseWriter response) {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
 
       ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -239,7 +228,6 @@ class KadminRestHandler {
     }
 
     void setPasswordExpiration(const Rest::Request& request, Http::ResponseWriter response) {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
@@ -276,7 +264,6 @@ class KadminRestHandler {
 
     void setPasswordPolicy(const Rest::Request& request, Http::ResponseWriter response)
     {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       Http::Code code = Http::Code::Ok;
       std::string message = "";
@@ -325,7 +312,6 @@ class KadminRestHandler {
     }
 
     void alterUser(const Rest::Request& request, Http::ResponseWriter response) {
-      response.timeoutAfter(timeout_);
       auto starttime = std::chrono::steady_clock::now();
       try {
         ait::kerberos::AdminSession<ConsoleLogger> kerbSession(adminUser_, realm_, keytab_);
