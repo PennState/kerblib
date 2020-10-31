@@ -15,7 +15,7 @@ examples_obj_files = $(examples_src:%.cpp=%.o)
 
 library_destination = ./lib/libkrb_security.a
 
-CC_ARGS := -std=c++14 -Wall -I. -I./include -I/usr/local/include -I/usr/include/et -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -L./lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lpistache -lpthread -Bdynamic -lkrb5 -lkadm5clnt $(BUILD_INFO)
+CC_ARGS := -g -rdynamic -std=c++14 -Wall -I. -I./include -I/usr/local/include -I/usr/include/et -I/usr/include/apr-1 -I/usr/include/mit-krb5/ -L./lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -Bstatic -lpistache -lpthread -Bdynamic -lkrb5 -lkadm5clnt $(BUILD_INFO)
 
 .PHONY: src loggers lib kadminRest examples
 
