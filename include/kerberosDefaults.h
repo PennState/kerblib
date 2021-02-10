@@ -7,6 +7,7 @@ namespace ait
   namespace kerberos
   {
     char DEFAULT_ACCESS_KEYTAB[] = "/usr/local/krb5/krb5kdc/kadm5.keytab";
+    char DEFAULT_SERVICE_NAME[] = "kadmin/admin";
   }
 }
 

@@ -37,34 +37,31 @@ namespace ait
         void *serverHandle_;
         std::string realm_;
  
-        void init(const std::string &clientString, const std::string &realm, const std::string &keytab) {
+        void init(const std::string &clientString, const std::string &realmString, const std::string &keytabString) {
 
           krb5_error_code error;
           if ((error = krb5_init_context(&context_)) != 0) {
             throw UnableToCreateSessionException("Unable to initialize the kerberos context");
           }
 
-          char client[clientString.length() + 1];
-          memset((void *)client, '\0', clientString.length() + 1);
+          char client[clientString.length() + 1] = {0};
           strncpy(client, clientString.c_str(), clientString.length());
 
-          kadm5_ret_t ret;
+          char realm[realmString.length() + 1] = {0};
+          strncpy(realm, realmString.c_str(), realmString.length());
+
+          char kt[keytabString.length() + 1] = {0};
+          strncpy(kt, keytabString.c_str(), keytabString.length());
 
           char **dbargs = NULL;
           kadm5_config_params params;
           memset(&params, 0, sizeof(params));
 
-          char realmString[realm.length() + 1];
-          memset(realmString, 0, realm.length() + 1);
-          strcpy(realmString, realm.c_str());
           params.mask |= KADM5_CONFIG_REALM;
-          params.realm = realmString;
-
-          char kt[keytab.length() + 1];
-          memset((void *)kt, '\0', keytab.length() + 1);
-          strncpy(kt, keytab.c_str(), keytab.length());
+          params.realm = realm;
 
           krb5_ccache cc;
+          kadm5_ret_t ret;
           ret = krb5_cc_default(context_, &cc);
           if (ret) {
             throw UnableToCreateSessionException("Unable to initialize credentials cache");
@@ -73,7 +70,7 @@ namespace ait
           ret = kadm5_init_with_skey(context_,
                                      client,
                                      kt,
-                                     NULL,
+                                     DEFAULT_SERVICE_NAME,
                                      &params,
                                      KADM5_STRUCT_VERSION,
                                      KADM5_API_VERSION_2,
