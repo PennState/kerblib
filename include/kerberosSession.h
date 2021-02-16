@@ -80,36 +80,10 @@ namespace ait
           if (ret != KADM5_OK)
           {
             std::string message;
-            switch(ret)
-            {
-              case KADM5_NO_SRV:
-                message = "No server currently available";
-                break;
-              case KADM5_RPC_ERROR:
-                message = "An RPC Error occured";
-                break;
-              case KADM5_BAD_PASSWORD:
-                message = "Invalid Password";
-                break;
-              case KADM5_SECURE_PRINC_MISSING:
-                message = "The principal Admin Service or Change PW service does not exist";
-                break;
-              case KADM5_BAD_CLIENT_PARAMS:
-                message = "There is an invalid field in the client parameters mask";
-                break;
-              case KADM5_BAD_SERVER_PARAMS:
-                message = "There is an invalid field in the server paramters mask";
-                break;
-              case KADM5_GSS_ERROR :
-                message = "A GSS Error occured initializing";
-                break;
-              default:
-                auto krb5_err = krb5_get_error_message(context_, ret);
-                std::string krb5_err_str(krb5_err);
-                krb5_free_error_message(context_, krb5_err);
-                message = "Unknown error occured during kadm5_init_with_skey(): " + krb5_err_str + "(" + boost::lexical_cast<std::string>(ret) + ")";
-                break;
-            }
+            auto krb5_err = krb5_get_error_message(context_, ret);
+            std::string krb5_err_str(krb5_err);
+            krb5_free_error_message(context_, krb5_err);
+            message = "error occured during kadm5_init_with_skey(): " + krb5_err_str + " (" + boost::lexical_cast<std::string>(ret) + ")";
             throw UnableToCreateSessionException(message);
           }
         
