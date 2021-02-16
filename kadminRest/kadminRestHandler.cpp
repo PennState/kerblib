@@ -450,7 +450,6 @@ class KadminRestHandler {
       std::cout << "time=\"" << iso8601() << "\""
         << " version=\"" << BUILD_VERSION << "\""
         << " thread=" << pthread_self()
-        << " addr=" << r.address().host()
         << " xff=\"" << xff_str << "\""
         << " host=\"" << host_str << "\""
         << " method=" << r.method()
