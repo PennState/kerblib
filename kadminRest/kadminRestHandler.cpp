@@ -441,6 +441,12 @@ class KadminRestHandler {
         traceid_str = traceid.get().value();
       }
       
+      std::string x_request_id_str = "";
+      auto x_request_id = r.headers().tryGetRaw("x-request-id");
+      if (!x_request_id.isEmpty()) {
+        x_request_id_str = x_request_id.get().value();
+      }
+
       std::cout << "time=\"" << iso8601() << "\""
         << " version=\"" << BUILD_VERSION << "\""
         << " thread=" << pthread_self()
@@ -449,10 +455,11 @@ class KadminRestHandler {
         << " host=\"" << host_str << "\""
         << " method=" << r.method()
         << " status_code=" << static_cast<int>(c)
-        << " et=\"" << et << "ms\""
+        << " et_ms="<< et
         << " resource=" << r.resource()
         << " ua=\"" <<ua_str << "\""
         << message
+        << " x-request-id=\"" << x_request_id_str << "\""
         << " x-b3-spanid=\"" << spanid_str << "\""
         << " x-b3-traceid=\"" << traceid_str << "\""
         << std::endl;
