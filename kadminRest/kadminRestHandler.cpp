@@ -19,6 +19,8 @@
 #include <signal.h>
 #include <chrono>
 #include <memory>
+#include <krb5/krb5.h>
+
 
 using namespace Pistache;
 
@@ -546,6 +548,11 @@ int main(int argc, char** argv) {
     <<" threads="<<threads
     <<" timeout="<<timeout
     <<std::endl;
+
+  if (!krb5_is_thread_safe()) {
+    std::cout << "WARNING: krb5 was not compiled with multithreaded support. Forcing threads = 1" << std::endl;
+    threads = 1;
+  }
 
   KadminRestHandler hrh(addr, adminPrincipal, realm, keytab, std::chrono::seconds(timeout));
   hrh.init(threads);
