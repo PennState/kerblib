@@ -443,7 +443,7 @@ class KadminRestHandler {
       
       std::cout << "time=\"" << iso8601() << "\""
         << " version=\"" << BUILD_VERSION << "\""
-        << " tid=" << std::this_thread::get_id()
+        << " thread=" << pthread_self()
         << " addr=" << r.address().host()
         << " xff=\"" << xff_str << "\""
         << " host=\"" << host_str << "\""

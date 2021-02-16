@@ -11,6 +11,7 @@
 #include <cstring>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
+#include "pthread.h"
 
 namespace ait
 {
@@ -60,9 +61,18 @@ namespace ait
           params.mask |= KADM5_CONFIG_REALM;
           params.realm = realm;
 
-          krb5_ccache cc;
           kadm5_ret_t ret;
-          ret = krb5_cc_default(context_, &cc);
+
+          // use a named MEMORY cred cache unique per thread        
+          krb5_ccache cc;
+          std::stringstream ss;
+          ss << pthread_self();
+          std::string ccacheNameStr = "MEMORY:kadminrest_"+ss.str();
+          char ccacheName[ccacheNameStr.length() + 1] = {0};
+          strncpy(ccacheName, ccacheNameStr.c_str(), ccacheNameStr.length());
+          ret = krb5_cc_resolve(context_, ccacheName, &cc);
+          
+          //ret = krb5_cc_default(context_, &cc);
           if (ret) {
             throw UnableToCreateSessionException("Unable to initialize credentials cache");
           }
